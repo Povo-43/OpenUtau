@@ -43,9 +43,12 @@ jobs:
         run: dotnet restore OpenUtau.Android/OpenUtau.Android.csproj
 
       # Android プロジェクトのビルド (arm64)
-      # --no-incremental: GitHub Actions ランナーでファイルロック競合 (MSB3554) を回避
+      # GitHub Actions ランナーでファイルロック競合 (MSB3554) を回避するため
+      # 事前に obj/bin をクリーンしてからビルド
       - name: Build (Android arm64)
-        run: dotnet build OpenUtau.Android/OpenUtau.Android.csproj -c Release -f net10.0-android36.0 -p:AndroidTargetArch=arm64 --no-incremental
+        run: |
+          find . -type d \( -name obj -o -name bin \) -exec rm -rf {} + 2>/dev/null || true
+          dotnet build OpenUtau.Android/OpenUtau.Android.csproj -c Release -f net10.0-android36.0 -p:AndroidTargetArch=arm64
 
       # アーティファクトとしてビルド生成物をアップロード (ビルド通過確認用)
       - name: Upload build output
