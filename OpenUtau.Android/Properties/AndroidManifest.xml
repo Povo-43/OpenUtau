@@ -10,7 +10,8 @@
       android:icon="@drawable/icon"
       android:label="OpenUtau"
       android:theme="@style/MyTheme"
-      android:resizeableActivity="true">
+      android:resizeableActivity="true"
+      android:hardwareAccelerated="true">
     <activity
         android:name="MainActivity"
         android:exported="true"

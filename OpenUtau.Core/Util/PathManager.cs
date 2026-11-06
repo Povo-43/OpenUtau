@@ -27,6 +27,13 @@ namespace OpenUtau.Core {
                         Directory.Delete(oldCache, true);
                     }
                 } catch { }
+            } else if (OS.IsAndroid()) {
+                // .NET on Android: Environment.SpecialFolder.Personal maps to
+                // /data/user/0/<package>/files (internal storage, app-private).
+                string personal = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+                DataPath = Path.Combine(personal, "OpenUtau");
+                CachePath = Path.Combine(personal, "..", "cache", "OpenUtau");
+                HomePathIsAscii = true;
             } else if (OS.IsLinux()) {
                 string userHome = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
                 string dataHome = Environment.GetEnvironmentVariable("XDG_DATA_HOME");
