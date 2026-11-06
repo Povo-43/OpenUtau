@@ -50,12 +50,3 @@ jobs:
           find . -type d \( -name obj -o -name bin \) -exec rm -rf {} + 2>/dev/null || true
           dotnet build OpenUtau.Android/OpenUtau.Android.csproj -c Release -f net10.0-android36.0 -p:AndroidTargetArch=arm64
 
-      # アーティファクトとしてビルド生成物をアップロード (ビルド通過確認用)
-      - name: Upload build output
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: OpenUtau-Android-build-logs
-          path: |
-            OpenUtau.Android/bin/**
-            OpenUtau.Android/obj/**
