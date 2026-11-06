@@ -65,7 +65,7 @@ jobs:
       - name: Prepare APK artifact
         run: |
           mkdir -p release
-          cp OpenUtau.Android/bin/Release/net10.0-android36.0/android-arm64/publish/*.apk release/OpenUtau-Android-${{ steps.version.outputs.version }}.apk
+          cp OpenUtau.Android/bin/Release/net10.0-android36.0/publish/com.stakira.openutau-Signed.apk release/OpenUtau-Android-${{ steps.version.outputs.version }}.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4

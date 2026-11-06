@@ -56,6 +56,6 @@ jobs:
         with:
           name: OpenUtau-Android.apk
           path: |
-            OpenUtau.Android/bin/Release/net10.0-android36.0/android-arm64/publish/*.apk
+            OpenUtau.Android/bin/Release/net10.0-android36.0/publish/*.apk
 
 
