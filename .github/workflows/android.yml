@@ -22,16 +22,21 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-      # Android SDK のセットアップ (ANDROID_SDK_ROOT を設定)
-      - uses: android-actions/setup-android@v3
-        with:
-          api-level: 36
+      # Android SDK のセットアップ (GitHub Actions ランナー標準の Android SDK を使用)
+      - name: Setup Android SDK
+        run: |
+          echo "ANDROID_HOME=${ANDROID_HOME:-/usr/lib/android-sdk}" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=${ANDROID_HOME:-/usr/lib/android-sdk}" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK_HOME=${ANDROID_HOME:-/usr/lib/android-sdk}/ndk" >> "$GITHUB_ENV"
+          # Android SDK platform 36 と build-tools をインストール
+          yes | "${ANDROID_HOME:-/usr/lib/android-sdk}/cmdline-tools/latest/bin/sdkmanager" \
+            "platforms;android-36" \
+            "build-tools;34.0.0" \
+            2>&1 || true
 
       # Android ビルド用ワークロードをインストール
       - name: Install Android workload
-        run: |
-          dotnet workload install android
-          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> "$GITHUB_ENV"
+        run: dotnet workload install android
 
       # 依存関係の復元 (Android ターゲット)
       - name: Restore (Android)
@@ -41,7 +46,7 @@ jobs:
       - name: Build (Android arm64)
         run: dotnet build OpenUtau.Android/OpenUtau.Android.csproj -c Release -f net10.0-android36.0 -p:AndroidTargetArch=arm64
 
-      # アーティファクトとして AAPT 生成物等をアップロード (ビルド通過確認用)
+      # アーティファクトとしてビルド生成物をアップロード (ビルド通過確認用)
       - name: Upload build output
         uses: actions/upload-artifact@v4
         if: always()
