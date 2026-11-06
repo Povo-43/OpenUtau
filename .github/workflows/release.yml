@@ -1,0 +1,93 @@
+name: Android Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+concurrency:
+  group: android-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # .NET 10 SDK (OpenUtau は net10.0 対象)
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      # Android SDK のセットアップ (GitHub Actions ランナー標準の Android SDK を使用)
+      - name: Setup Android SDK
+        run: |
+          echo "ANDROID_HOME=${ANDROID_HOME:-/usr/lib/android-sdk}" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=${ANDROID_HOME:-/usr/lib/android-sdk}" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK_HOME=${ANDROID_HOME:-/usr/lib/android-sdk}/ndk" >> "$GITHUB_ENV"
+          # Android SDK platform 36 と build-tools をインストール
+          yes | "${ANDROID_HOME:-/usr/lib/android-sdk}/cmdline-tools/latest/bin/sdkmanager" \
+            "platforms;android-36" \
+            "build-tools;34.0.0" \
+            2>&1 || true
+
+      # Android ビルド用ワークロードをインストール
+      - name: Install Android workload
+        run: dotnet workload install android
+
+      # 依存関係の復元 (Android ターゲット)
+      - name: Restore (Android)
+        run: dotnet restore OpenUtau.Android/OpenUtau.Android.csproj
+
+      # APK 生成 (arm64, デバッグ署名済み)
+      - name: Build APK (Android arm64)
+        run: |
+          find . -type d \( -name obj -o -name bin \) -exec rm -rf {} + 2>/dev/null || true
+          dotnet publish OpenUtau.Android/OpenUtau.Android.csproj -c Release -f net10.0-android36.0 -p:AndroidTargetArch=arm64 -p:AndroidPackageFormat=apk -p:AndroidSignMode=Debug
+
+      # バージョン文字列をタグから取得
+      - name: Get version from tag
+        id: version
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+
+      # APK をリネームしてアップロード
+      - name: Prepare APK artifact
+        run: |
+          mkdir -p release
+          cp OpenUtau.Android/bin/Release/net10.0-android36.0/android-arm64/publish/*.apk release/OpenUtau-Android-${{ steps.version.outputs.version }}.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenUtau-Android-release.apk
+          path: release/*.apk
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download APK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: OpenUtau-Android-release.apk
+          path: release
+
+      - name: Create Release and upload APK
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref }}
+          name: OpenUtau Android ${{ needs.build.outputs.version }}
+          draft: false
+          prerelease: false
+          files: release/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
