@@ -54,7 +54,7 @@ jobs:
       - name: Build APK (Android arm64)
         run: |
           find . -type d \( -name obj -o -name bin \) -exec rm -rf {} + 2>/dev/null || true
-          dotnet publish OpenUtau.Android/OpenUtau.Android.csproj -c Release -f net10.0-android36.0 -p:AndroidTargetArch=arm64 -p:AndroidPackageFormat=apk -p:AndroidSignMode=ApkKeyStore -p:AndroidSigningKeyStore="${{ env.KEYSTORE_PATH }}" -p:AndroidSigningKeyStorePassword="${{ secrets.KEYSTORE_PASSWORD }}" -p:AndroidSigningKeyAlias="${{ secrets.KEY_ALIAS }}" -p:AndroidSigningKeyPassword="${{ secrets.KEY_PASSWORD }}" --no-incremental /p:UseSharedCompilation=false
+          dotnet publish OpenUtau.Android/OpenUtau.Android.csproj -c Release -f net10.0-android36.0 -p:AndroidTargetArch=arm64 -p:AndroidPackageFormat=apk -p:AndroidSignMode=ApkKeyStore -p:AndroidSigningKeyStore="${{ env.KEYSTORE_PATH }}" -p:AndroidSigningKeyStorePassword="${{ secrets.KEYSTORE_PASSWORD }}" -p:AndroidSigningKeyAlias="${{ secrets.KEY_ALIAS }}" -p:AndroidSigningKeyPassword="${{ secrets.KEY_PASSWORD }}" --no-incremental -p:UseSharedCompilation=false
 
       # バージョン文字列をタグから取得
       - name: Get version from tag
