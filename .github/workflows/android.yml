@@ -1,0 +1,52 @@
+name: Android Build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # .NET 10 SDK (OpenUtau は net10.0 対象)
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      # Android SDK のセットアップ (ANDROID_SDK_ROOT を設定)
+      - uses: android-actions/setup-android@v3
+        with:
+          api-level: 36
+
+      # Android ビルド用ワークロードをインストール
+      - name: Install Android workload
+        run: |
+          dotnet workload install android
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> "$GITHUB_ENV"
+
+      # 依存関係の復元 (Android ターゲット)
+      - name: Restore (Android)
+        run: dotnet restore OpenUtau.Android/OpenUtau.Android.csproj
+
+      # Android プロジェクトのビルド (arm64)
+      - name: Build (Android arm64)
+        run: dotnet build OpenUtau.Android/OpenUtau.Android.csproj -c Release -f net10.0-android36.0 -p:AndroidTargetArch=arm64
+
+      # アーティファクトとして AAPT 生成物等をアップロード (ビルド通過確認用)
+      - name: Upload build output
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: OpenUtau-Android-build-logs
+          path: |
+            OpenUtau.Android/bin/**
+            OpenUtau.Android/obj/**

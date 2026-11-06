@@ -31,9 +31,11 @@ namespace OpenUtau.App {
         public override void OnFrameworkInitializationCompleted() {
             Log.Information("Framework initialization completed.");
             RegisterUnhandledExceptionHandlers();
+#if !ANDROID
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop) {
                 desktop.MainWindow = new SplashWindow();
             }
+#endif
 
             base.OnFrameworkInitializationCompleted();
             UiFontManager.Apply();

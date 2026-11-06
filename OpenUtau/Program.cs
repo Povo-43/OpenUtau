@@ -87,6 +87,7 @@ namespace OpenUtau.App {
                     MaxGpuResourceSizeBytes = 256 * 1024 * 1024 // 256 MB
                 });
             
+#if !ANDROID
             if (OS.IsLinux() && Core.Util.Preferences.Default.UseWayland) {
                 builder.UseWaylandWithFallback();
             }
@@ -94,6 +95,9 @@ namespace OpenUtau.App {
             return builder.With(new X11PlatformOptions {
                 EnableIme = true
             });
+#else
+            return builder;
+#endif
         }
 
         public static void Run(string[] args)

@@ -1,0 +1,20 @@
+using Android.App;
+using Android.Content;
+using Android.Content.PM;
+using Android.OS;
+using Avalonia.Android;
+
+namespace OpenUtau.Android;
+
+[Activity(
+    Label = "OpenUtau",
+    Theme = "@style/MyTheme",
+    MainLauncher = true,
+    Exported = true,
+    ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode | ConfigChanges.FontScale)]
+[IntentFilter(new[] { Intent.ActionMain }, Categories = new[] { Intent.CategoryLauncher })]
+public class MainActivity : AvaloniaMainActivity {
+    protected override void OnCreate(Bundle? savedInstanceState) {
+        base.OnCreate(savedInstanceState);
+    }
+}

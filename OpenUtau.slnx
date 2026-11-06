@@ -14,4 +14,7 @@
   <Project Path="OpenUtau/OpenUtau.csproj">
     <BuildDependency Project="OpenUtau.Plugin.Builtin/OpenUtau.Plugin.Builtin.csproj" />
   </Project>
+  <Project Path="OpenUtau.Android/OpenUtau.Android.csproj">
+    <BuildDependency Project="OpenUtau/OpenUtau.csproj" />
+  </Project>
 </Solution>
