@@ -14,8 +14,7 @@ namespace OpenUtau.App.Controls;
 public partial class PianoRoll {
     private DispatcherTimer? _longPressTimer;
     private Pointer? _longPressPointer;
-    private Point _longPressStartPosition;
-    private DateTime? _longPressStartTime;
+    private Point? _longPressPosition;
     private const int LongPressDelayMs = 600;
     private const double LongPressMoveThreshold = 10; // pixels
 
@@ -23,6 +22,9 @@ public partial class PianoRoll {
     private readonly Dictionary<int, Point> _touchPoints = new();
     private double _lastPinchDistance;
     private bool _pinching;
+
+    // Display density for UI scaling on tablets
+    private double _displayDensity = 1.0;
 
     static PianoRoll() {
         // Ensure touch devices are treated as left-button input on Android
@@ -41,6 +43,10 @@ public partial class PianoRoll {
         this.AddHandler(PointerMovedEvent, OnTouchPointerMoved, RoutingStrategies.Tunnel);
         this.AddHandler(PointerReleasedEvent, OnTouchPointerReleased, RoutingStrategies.Tunnel);
         this.AddHandler(PointerWheelChangedEvent, OnTouchPointerWheelChanged, RoutingStrategies.Tunnel);
+
+        // Get display density for UI scaling
+        // Default to 1.0; tablet UI scaling can be refined later via Avalonia Screen API
+        _displayDensity = 1.0;
     }
 
     private void OnTouchPointerPressed(object? sender, PointerPressedEventArgs args) {
@@ -54,8 +60,7 @@ public partial class PianoRoll {
 
         // Start long-press timer
         _longPressPointer = pointer;
-        _longPressStartPosition = point.Position;
-        _longPressStartTime = DateTime.Now;
+        _longPressPosition = point.Position;
         _longPressTimer?.Start();
 
         // Track touch point for pinch detection
@@ -88,7 +93,7 @@ public partial class PianoRoll {
                 var normalized = center.WithX(center.X / control.Bounds.Width)
                                         .WithY(center.Y / control.Bounds.Height);
                 // Zoom both X and Y by the same factor
-                var deltaY = Math.Log(scale) * 5.0; // sensitivity
+                var deltaY = Math.Log(scale) * 6.0; // increased sensitivity for tablets
                 xZoom?.By(normalized, deltaY, true);
                 yZoom?.By(normalized, deltaY, true);
                 _lastPinchDistance = newDistance;
@@ -98,8 +103,8 @@ public partial class PianoRoll {
         }
 
         // Long-press move threshold: cancel if finger moves too much
-        if (_longPressTimer?.IsEnabled == true && _longPressPointer == pointer) {
-            var delta = point.Position - _longPressStartPosition;
+        if (_longPressTimer?.IsEnabled == true && _longPressPointer == pointer && _longPressPosition.HasValue) {
+            var delta = point.Position - _longPressPosition.Value;
             if (Math.Sqrt(delta.X * delta.X + delta.Y * delta.Y) > LongPressMoveThreshold) {
                 _longPressTimer.Stop();
                 _longPressPointer = null;
@@ -133,17 +138,20 @@ public partial class PianoRoll {
 
     private void OnLongPressTick(object? sender, EventArgs e) {
         _longPressTimer?.Stop();
-        if (_longPressPointer == null) return;
+        if (_longPressPointer == null || !_longPressPosition.HasValue) return;
 
         // Trigger context menu (right-click equivalent)
         shouldOpenNotesContextMenu = true;
         var contextMenu = this.Find<ContextMenu>("NotesContextMenu");
-        if (contextMenu != null && _longPressPointer != null) {
-            // Position the menu near the long-press point
-            // ContextMenu.Open() positions relative to the control; we use a PlacementTarget-free approach
+        if (contextMenu != null) {
+            // Position the context menu near the long-press point using offsets
+            contextMenu.PlacementTarget = this;
+            contextMenu.HorizontalOffset = _longPressPosition.Value.X;
+            contextMenu.VerticalOffset = _longPressPosition.Value.Y;
             contextMenu.Open();
         }
         _longPressPointer = null;
+        _longPressPosition = null;
     }
 
     private double PinchDistance() {
@@ -165,5 +173,11 @@ public partial class PianoRoll {
         var p2 = enumerator.Current.Value;
         return new Point((p1.X + p2.X) / 2, (p1.Y + p2.Y) / 2);
     }
+
+    /// <summary>
+    /// Display density factor for UI scaling on Android tablets.
+    /// Callers can use this to scale grid sizes, note sizes, and touch targets.
+    /// </summary>
+    public double DisplayDensity => _displayDensity;
 }
 #endif
