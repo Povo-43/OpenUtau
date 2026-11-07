@@ -1,14 +1,9 @@
-using System;
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
 using Android.OS;
 using Android.Runtime;
-using AndroidX.AppCompat.App;
-using Avalonia;
 using Avalonia.Android;
-using OpenUtau.Android.Audio;
-using OpenUtau.App.Views;
 using OpenUtau.Core;
 
 namespace OpenUtau.Android;
@@ -21,39 +16,10 @@ namespace OpenUtau.Android;
     Exported = true,
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode | ConfigChanges.FontScale)]
 [IntentFilter(new[] { Intent.ActionMain }, Categories = new[] { Intent.CategoryLauncher })]
-public class MainActivity : AppCompatActivity
-{
-    private AvaloniaView? _avaloniaView;
-
-    protected override void OnCreate(Bundle? savedInstanceState)
-    {
+public class MainActivity : AvaloniaMainActivity {
+    protected override void OnCreate(Bundle? savedInstanceState) {
         base.OnCreate(savedInstanceState);
-
-        // Avalonia アプリを構築
-        var builder = AppBuilder.Configure<global::OpenUtau.App.App>()
-            .UseAndroid()
-            .LogToTrace()
-            .With(new SkiaOptions
-            {
-                MaxGpuResourceSizeBytes = 256 * 1024 * 1024 // 256 MB
-            });
-
-        builder.SetupWithoutStarting();
-
-        // メインウィンドウのコンテンツを AvaloniaView に設定
-        // Android では Window を直接表示できないため、Content プロパティ（Grid などのコントロール）を設定する
-        var mainWindow = new MainWindow();
-        _avaloniaView = new AvaloniaView(this);
-        _avaloniaView.Content = mainWindow.Content ?? throw new InvalidOperationException("MainWindow.Content is null");
-        SetContentView(_avaloniaView);
-
         // Android オーディオ出力 (AudioTrack) を再生エンジンに差し替え
         PlaybackManager.Inst.AudioOutput = new AndroidAudioOutput();
-    }
-
-    protected override void OnDestroy()
-    {
-        _avaloniaView?.Dispose();
-        base.OnDestroy();
     }
 }

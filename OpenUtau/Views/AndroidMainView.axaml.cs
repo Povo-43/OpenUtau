@@ -1,0 +1,15 @@
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Markup.Xaml;
+
+namespace OpenUtau.App.Views;
+
+public partial class AndroidMainView : UserControl {
+    public AndroidMainView() {
+        InitializeComponent();
+    }
+
+    private void InitializeComponent() {
+        AvaloniaXamlLoader.Load(this);
+    }
+}

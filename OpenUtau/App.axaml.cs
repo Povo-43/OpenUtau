@@ -36,7 +36,10 @@ namespace OpenUtau.App {
                 desktop.MainWindow = new SplashWindow();
             }
 #else
-            // Android: single-window app. MainWindow view factory is set in OpenUtauApplication.
+            // Android: single-window app. Set MainView for AvaloniaView.
+            if (ApplicationLifetime is ISingleViewApplicationLifetime singleView) {
+                singleView.MainView = new Views.AndroidMainView();
+            }
 #endif
 
             base.OnFrameworkInitializationCompleted();
