@@ -32,7 +32,7 @@ using Path = System.IO.Path;
 using Point = Avalonia.Point;
 
 namespace OpenUtau.App.Views {
-    public partial class MainWindow : Window, ICmdSubscriber {
+    public partial class MainWindow : UserControl, ICmdSubscriber {
         private readonly KeyModifiers cmdKey =
             OS.IsMacOS() ? KeyModifiers.Meta : KeyModifiers.Control;
         private readonly MainWindowViewModel viewModel;
