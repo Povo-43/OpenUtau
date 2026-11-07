@@ -76,6 +76,9 @@ namespace OpenUtau.App.Controls {
             ValueTip.IsVisible = false;
             SetPenToolIcon();
             penTool.AddHandler(PointerPressedEvent, OnToolButtonPointerPressed, RoutingStrategies.Tunnel | RoutingStrategies.Bubble, true);
+#if ANDROID
+            InitializeTouchSupport();
+#endif
             this.LayoutUpdated += PianoRollLayoutUpdated;
         }
 

@@ -156,6 +156,9 @@ namespace OpenUtau.App {
             }
         #endif
 
+#if ANDROID
+            return await OpenFileAndroid(window, titleKey, startLocation, types);
+#else
             var files = await window.StorageProvider.OpenFilePickerAsync(
                 new FilePickerOpenOptions() {
                     Title = ThemeManager.GetString(titleKey),
@@ -167,7 +170,36 @@ namespace OpenUtau.App {
                 ?.Select(f => f.TryGetLocalPath())
                 ?.OfType<string>()
                 ?.FirstOrDefault();
+#endif
         }
+
+#if ANDROID
+        private static async Task<string?> OpenFileAndroid(
+            Window window, string titleKey, string? startLocation, params FilePickerFileType[] types) {
+            var location = startLocation == null
+                ? null
+                : await window.StorageProvider.TryGetFolderFromPathAsync(startLocation);
+            var files = await window.StorageProvider.OpenFilePickerAsync(
+                new FilePickerOpenOptions() {
+                    Title = ThemeManager.GetString(titleKey),
+                    AllowMultiple = false,
+                    FileTypeFilter = types,
+                    SuggestedStartLocation = location,
+                });
+            if (files == null || files.Count == 0) return null;
+            var f = files[0];
+            var localPath = f.TryGetLocalPath();
+            if (!string.IsNullOrEmpty(localPath)) return localPath;
+            // Android SAF: TryGetLocalPath() returns null for content:// URIs,
+            // so read the stream and copy to a temp file.
+            using var stream = await f.OpenReadAsync(FileAccess.Read);
+            var tempName = f.Name ?? "file";
+            var tempPath = Path.Combine(Path.GetTempPath(), tempName);
+            using var fileStream = File.Create(tempPath);
+            await stream.CopyToAsync(fileStream);
+            return tempPath;
+        }
+#endif
 
         public async static Task<string[]?> OpenFilesAboutProject(
                 Window window, string titleKey, params FilePickerFileType[] types) {
@@ -182,8 +214,9 @@ namespace OpenUtau.App {
             return result;
         }
 
-        public async static Task<string[]?> OpenFiles(
-            Window window, string titleKey, string? startLocation, params FilePickerFileType[] types) {
+#if ANDROID
+            return await OpenFilesAndroid(window, titleKey, startLocation, types);
+#else
             var location = startLocation == null
                 ? null
                 : await window.StorageProvider.TryGetFolderFromPathAsync(startLocation);
@@ -198,7 +231,40 @@ namespace OpenUtau.App {
                 ?.Select(f => f.TryGetLocalPath())
                 ?.OfType<string>()
                 ?.ToArray();
+#endif
         }
+
+#if ANDROID
+        private static async Task<string[]?> OpenFilesAndroid(
+            Window window, string titleKey, string? startLocation, params FilePickerFileType[] types) {
+            var location = startLocation == null
+                ? null
+                : await window.StorageProvider.TryGetFolderFromPathAsync(startLocation);
+            var files = await window.StorageProvider.OpenFilePickerAsync(
+                new FilePickerOpenOptions() {
+                    Title = ThemeManager.GetString(titleKey),
+                    AllowMultiple = true,
+                    FileTypeFilter = types,
+                    SuggestedStartLocation = location
+                });
+            if (files == null || files.Count == 0) return null;
+            var paths = new List<string>();
+            foreach (var f in files) {
+                var localPath = f.TryGetLocalPath();
+                if (!string.IsNullOrEmpty(localPath)) {
+                    paths.Add(localPath);
+                    continue;
+                }
+                using var stream = await f.OpenReadAsync(FileAccess.Read);
+                var tempName = f.Name ?? "file";
+                var tempPath = Path.Combine(Path.GetTempPath(), tempName);
+                using var fileStream = File.Create(tempPath);
+                await stream.CopyToAsync(fileStream);
+                paths.Add(tempPath);
+            }
+            return paths.ToArray();
+        }
+#endif
 
         public async static Task<string?> OpenFolderAboutSinger(Window window, string titleKey) {
             var dir = await OpenFolder(window, titleKey, Preferences.Default.RecentOpenSingerDirectory);
@@ -248,6 +314,9 @@ namespace OpenUtau.App {
                 ? null
                 : await window.StorageProvider.TryGetFolderFromPathAsync(startLocation);
 
+#if ANDROID
+            return await SaveFileAndroid(window, titleKey, startLocation, filename, types);
+#else
             var file = await window.StorageProvider.SaveFilePickerAsync(
                  new FilePickerSaveOptions {
                      Title = ThemeManager.GetString(titleKey),
@@ -257,6 +326,30 @@ namespace OpenUtau.App {
                      SuggestedFileName = filename,
                  });
             return file?.TryGetLocalPath();
+#endif
         }
+
+#if ANDROID
+        private static async Task<string?> SaveFileAndroid(
+            Window window, string titleKey, string? startLocation, string? filename, params FilePickerFileType[] types) {
+            var location = startLocation == null
+                ? null
+                : await window.StorageProvider.TryGetFolderFromPathAsync(startLocation);
+            var file = await window.StorageProvider.SaveFilePickerAsync(
+                 new FilePickerSaveOptions {
+                     Title = ThemeManager.GetString(titleKey),
+                     FileTypeChoices = types,
+                     ShowOverwritePrompt = true,
+                     SuggestedStartLocation = location,
+                     SuggestedFileName = filename,
+                 });
+            if (file == null) return null;
+            var localPath = file.TryGetLocalPath();
+            if (!string.IsNullOrEmpty(localPath)) return localPath;
+            // Android SAF: no local path; caller will need to stream-write via OpenWriteAsync.
+            // For now return null and let callers handle stream-based save.
+            return null;
+        }
+#endif
     }
 }
