@@ -4,6 +4,7 @@ using Android.Content.PM;
 using Android.OS;
 using Android.Runtime;
 using Avalonia.Android;
+using OpenUtau.Android.Audio;
 using OpenUtau.Core;
 
 namespace OpenUtau.Android;
