@@ -2125,25 +2125,12 @@ namespace OpenUtau.App.Views {
                     PathManager.Inst.ClearCache();
                     Log.Information("Cache cleared.");
                 }
-#if !ANDROID
                 PlaybackManager.Inst.StopPlayback();
                 Preferences.Default.MainWindowSize.Set(Width, Height, Position.X, Position.Y, (int)WindowState);
-                Preferences.Default.RecoveryPath = string.Empty;
-                Preferences.Save();
-                return;
             }
-            e.Cancel = true;
-            AskIfSaveAndContinue().ContinueWith(t => {
-                if (!t.Result) {
-                    return;
-                }
-                pianoRollWindow?.Close();
-                forceClose = true;
-            }, TaskScheduler.FromCurrentSynchronizationContext());
-#endif
-#endif
         }
 #endif
+
 
         private async Task<bool> AskIfSaveAndContinue() {
             var result = await MessageBox.Show(
@@ -2155,12 +2142,8 @@ namespace OpenUtau.App.Views {
                 case MessageBox.MessageBoxResult.Yes:
                     await Save();
                     goto case MessageBox.MessageBoxResult.No;
-                case MessageBox.MessageBoxResult.No:
                     return true; // Continue.
-                default:
                     return false; // Cancel.
-            }
-        }
 
         public void OnNext(UCommand cmd, bool isUndo) {
             // Errors from missing packages become an offer to install them.
