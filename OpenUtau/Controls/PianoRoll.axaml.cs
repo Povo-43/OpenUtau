@@ -32,6 +32,9 @@ namespace OpenUtau.App.Controls {
     public partial class PianoRoll : UserControl, IValueTip, ICmdSubscriber {
         public MainWindow? MainWindow { get; set; }
         public PianoRollViewModel ViewModel;
+#if ANDROID
+        partial void InitializeTouchSupport();
+#endif
 
         private readonly KeyModifiers cmdKey =
             OS.IsMacOS() ? KeyModifiers.Meta : KeyModifiers.Control;
