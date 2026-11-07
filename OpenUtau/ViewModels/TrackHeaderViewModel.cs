@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
@@ -423,27 +424,36 @@ namespace OpenUtau.App.ViewModels {
                     DocManager.Inst.EndUndoGroup();
                 }
             };
-#if !ANDROID
-            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null) {
-                dialog.ShowDialog(desktop.MainWindow);
+            if (RootWindow != null) {
+                dialog.ShowDialog(RootWindow);
             }
-#endif
+        }
+
+        private Window? RootWindow {
+            get {
+                var lifetime = Application.Current?.ApplicationLifetime;
+                if (lifetime is IClassicDesktopStyleApplicationLifetime desktop) {
+                    return desktop.MainWindow;
+                }
+                if (lifetime is ISingleViewApplicationLifetime singleView) {
+                    return singleView.MainView as Window;
+                }
+                return null;
+            }
         }
 
         public async void SelectTrackColor() {
             var dialog = new TrackColorDialog();
             dialog.DataContext = new TrackColorViewModel(track);
 
-#if !ANDROID
-            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null) {
-                await dialog.ShowDialog(desktop.MainWindow);
+            if (RootWindow != null) {
+                await dialog.ShowDialog(RootWindow);
                 TrackAccentColor = ThemeManager.GetTrackColor(track.TrackColor).AccentColor;
                 TrackColor = Preferences.Default.UseTrackColor
                 ? ThemeManager.GetTrackColor(track.TrackColor)
                 : ThemeManager.GetTrackColor("Blue");
                 RefreshSelectionStyle();
             }
-#endif
         }
 
         public void Duplicate() {
@@ -497,11 +507,9 @@ namespace OpenUtau.App.ViewModels {
         }
 
         public void OpenMixFxDialog() {
-#if !ANDROID
-            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null) {
-                MixFxDialog.Open(desktop.MainWindow, track);
+            if (RootWindow != null) {
+                MixFxDialog.Open(RootWindow, track);
             }
-#endif
         }
     }
 }

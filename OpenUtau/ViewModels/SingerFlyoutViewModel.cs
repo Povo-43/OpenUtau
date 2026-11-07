@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Input;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
@@ -313,33 +314,35 @@ namespace OpenUtau.App.ViewModels {
             SingersViewModel.OpenSingerLocation(tile.Singer);
         }
 
+        private Window? RootWindow {
+            get {
+                var lifetime = Application.Current?.ApplicationLifetime;
+                if (lifetime is IClassicDesktopStyleApplicationLifetime desktop) {
+                    return desktop.MainWindow;
+                }
+                if (lifetime is ISingleViewApplicationLifetime singleView) {
+                    return singleView.MainView as Window;
+                }
+                return null;
+            }
+        }
+
         public void EditSearchTerms(SingerTileViewModel tile) {
             CloseRequested?.Invoke();
-#if !ANDROID
-            var mainWindow = (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
-            if (mainWindow == null) {
-                return;
+            if (RootWindow != null) {
+                SingersDialog.ShowSearchTermsDialog(RootWindow, tile.Singer,
+                    text => SingersViewModel.SetSearchTerms(tile.Singer, text));
             }
-            SingersDialog.ShowSearchTermsDialog(mainWindow, tile.Singer,
-                text => SingersViewModel.SetSearchTerms(tile.Singer, text));
-#endif
         }
 
         public async void InstallSinger() {
             CloseRequested?.Invoke();
-            MainWindow? mainWindow = null;
-#if !ANDROID
-            mainWindow = (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)
-                ?.MainWindow as MainWindow;
-            if (mainWindow == null) {
-                return;
-            }
-#endif
-            if (mainWindow == null) {
+            var window = RootWindow;
+            if (window == null) {
                 return;
             }
             var file = await FilePicker.OpenFileAboutSinger(
-                mainWindow, "menu.tools.singer.install", FilePicker.ArchiveFiles);
+                window, "menu.tools.singer.install", FilePicker.ArchiveFiles);
             if (file == null) {
                 return;
             }
@@ -358,13 +361,13 @@ namespace OpenUtau.App.ViewModels {
                         ArchiveFilePath = file,
                     },
                 };
-                _ = setup.ShowDialog(mainWindow);
+                _ = setup.ShowDialog(window);
                 if (setup.Position.Y < 0) {
                     setup.Position = setup.Position.WithY(0);
                 }
             } catch (Exception e) {
                 Log.Error(e, $"Failed to install singer {file}");
-                _ = await MessageBox.ShowError(mainWindow, new MessageCustomizableException($"Failed to install singer {file}", $"<translate:errors.failed.installsinger>: {file}", e));
+                _ = await MessageBox.ShowError(window, new MessageCustomizableException($"Failed to install singer {file}", $"<translate:errors.failed.installsinger>: {file}", e));
             }
         }
 
