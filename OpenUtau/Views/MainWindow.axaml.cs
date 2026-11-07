@@ -2145,10 +2145,10 @@ namespace OpenUtau.App.Views {
                     return true; // Continue.
                     return false; // Cancel.
 
+                }
         public void OnNext(UCommand cmd, bool isUndo) {
             // Errors from missing packages become an offer to install them.
             var missingPackages = MissingPackageException.Collect((cmd as ErrorMessageNotification)?.e ?? (cmd as ToastNotification)?.e);
-                }
             if (missingPackages.Count > 0) {
                 _ = PackageInstallPrompt.EnsureInstalledAsync(this, missingPackages, afterFailure: true);
                 return;
