@@ -67,11 +67,23 @@ jobs:
           mkdir -p release
           cp OpenUtau.Android/bin/Release/net10.0-android36.0/publish/com.stakira.openutau-Signed.apk release/OpenUtau-Android-${{ steps.version.outputs.version }}.apk
 
+      # APK を zip で圧縮 (帯域が細い環境向け)
+      - name: Compress APK to zip
+        run: |
+          cd release
+          zip -9 OpenUtau-Android-${{ steps.version.outputs.version }}.zip OpenUtau-Android-${{ steps.version.outputs.version }}.apk
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: OpenUtau-Android-release.apk
           path: release/*.apk
+
+      - name: Upload APK zip artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenUtau-Android-release.zip
+          path: release/*.zip
 
   release:
     needs: build
@@ -87,13 +99,19 @@ jobs:
           name: OpenUtau-Android-release.apk
           path: release
 
-      - name: Create Release and upload APK
+      - name: Download APK zip artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: OpenUtau-Android-release.zip
+          path: release
+
+      - name: Create Release and upload APK + zip
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref }}
           name: OpenUtau Android ${{ needs.build.outputs.version }}
           draft: false
           prerelease: false
-          files: release/*.apk
+          files: release/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
