@@ -18,7 +18,7 @@ namespace OpenUtau.Android;
     Exported = true,
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode | ConfigChanges.FontScale)]
 [IntentFilter(new[] { Intent.ActionMain }, Categories = new[] { Intent.CategoryLauncher })]
-public class MainActivity : AppCompatActivity
+public class MainActivity : AvaloniaActivity
 {
     private AvaloniaView? _avaloniaView;
 
