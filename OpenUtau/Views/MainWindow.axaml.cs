@@ -2219,3 +2219,4 @@ namespace OpenUtau.App.Views {
         }
     }
 }
+# Fix: Ensure MainWindow.axaml root element is Window
