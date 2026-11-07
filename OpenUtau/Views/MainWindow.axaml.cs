@@ -2110,6 +2110,7 @@ namespace OpenUtau.App.Views {
             }
         }
 
+#if !ANDROID
         public void WindowClosing(object? sender, WindowClosingEventArgs e) {
             if (forceClose || DocManager.Inst.ChangesSaved) {
                 if (Preferences.Default.ClearCacheOnQuit) {
@@ -2117,6 +2118,7 @@ namespace OpenUtau.App.Views {
                     PathManager.Inst.ClearCache();
                     Log.Information("Cache cleared.");
                 }
+#if !ANDROID
                 PlaybackManager.Inst.StopPlayback();
                 Preferences.Default.MainWindowSize.Set(Width, Height, Position.X, Position.Y, (int)WindowState);
                 Preferences.Default.RecoveryPath = string.Empty;
@@ -2130,9 +2132,11 @@ namespace OpenUtau.App.Views {
                 }
                 pianoRollWindow?.Close();
                 forceClose = true;
-                Close();
             }, TaskScheduler.FromCurrentSynchronizationContext());
+#endif
+#endif
         }
+#endif
 
         private async Task<bool> AskIfSaveAndContinue() {
             var result = await MessageBox.Show(
