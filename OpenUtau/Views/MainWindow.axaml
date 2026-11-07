@@ -19,7 +19,6 @@
       <Setter Property="BorderBrush" Value="{DynamicResource MenuFlyoutPresenterBorderBrush}"/>
       <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
       <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled"/>
-    <UserControl.Styles>
     </Style>
   </UserControl.Styles>
   <Grid>
@@ -224,8 +223,7 @@
                 <Setter Property="MinHeight" Value="48" />
                 <Setter Property="Padding" Value="16,0" />
                 <Setter Property="VerticalContentAlignment" Value="Center" />
-              <UserControl.Styles>
-    </Style>
+              </Style>
             </ListBox.Styles>
             <ListBox.ItemTemplate>
               <DataTemplate x:DataType="vm:RecentFileInfo">
@@ -246,8 +244,7 @@
                 <Setter Property="MinHeight" Value="48" />
                 <Setter Property="Padding" Value="16,0" />
                 <Setter Property="VerticalContentAlignment" Value="Center" />
-              <UserControl.Styles>
-    </Style>
+              </Style>
             </ListBox.Styles>
             <ListBox.ItemTemplate>
               <DataTemplate x:DataType="vm:RecentFileInfo">
@@ -366,8 +363,7 @@
                     <Setter Property="Command" Value="{Binding Command}"/>
                     <Setter Property="CommandParameter" Value="{Binding CommandParameter}"/>
                     <Setter Property="ItemsSource" Value="{Binding Items}"/>
-                  <UserControl.Styles>
-    </Style>
+                  </Style>
                 </ContextMenu.Styles>
               </ContextMenu>
             </Canvas.ContextMenu>
@@ -487,5 +483,4 @@
       </Carousel>
     </Grid>
   </Grid>
-</UserControl.Styles>
 </UserControl>
