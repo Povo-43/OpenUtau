@@ -32,7 +32,7 @@ using Path = System.IO.Path;
 using Point = Avalonia.Point;
 
 namespace OpenUtau.App.Views {
-    public partial class MainWindow : UserControl, ICmdSubscriber {
+    public partial class MainWindow : Window, ICmdSubscriber {
 #if ANDROID
     public WindowState WindowState { get => WindowState.Normal; set { } }
     public PixelPoint Position { get => new PixelPoint(0, 0); set { } }
