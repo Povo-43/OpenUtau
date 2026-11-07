@@ -881,6 +881,7 @@ namespace OpenUtau.App.Views {
         void OnMenuLayoutHSplit12(object sender, RoutedEventArgs args) => LayoutSplit(1.0 / 3, null);
         void OnMenuLayoutHSplit13(object sender, RoutedEventArgs args) => LayoutSplit(1.0 / 4, null);
 
+#if !ANDROID
         private void LayoutSplit(double? x, double? y) {
             var mainScreen = Screens.Primary ?? Screens.All[0];
             if (mainScreen == null) {
@@ -916,6 +917,7 @@ namespace OpenUtau.App.Views {
                 pianoRollWindow.Height = (y != null ? screenHeight - offsetY : screenHeight) - titleBarHeight;
             }
         }
+#endif
 
         void OnKeyDown(object sender, KeyEventArgs args) {
             if (PianoRollContainer.IsKeyboardFocusWithin) {
