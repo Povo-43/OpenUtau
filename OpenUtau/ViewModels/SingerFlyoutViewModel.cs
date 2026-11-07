@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -314,14 +314,14 @@ namespace OpenUtau.App.ViewModels {
             SingersViewModel.OpenSingerLocation(tile.Singer);
         }
 
-        private Window? RootWindow {
+        private Visual? RootWindow {
             get {
                 var lifetime = Application.Current?.ApplicationLifetime;
                 if (lifetime is IClassicDesktopStyleApplicationLifetime desktop) {
                     return desktop.MainWindow;
                 }
                 if (lifetime is ISingleViewApplicationLifetime singleView) {
-                    return singleView.MainView as Window;
+                    return singleView.MainView as Visual;
                 }
                 return null;
             }

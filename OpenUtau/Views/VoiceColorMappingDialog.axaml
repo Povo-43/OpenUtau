@@ -1,11 +1,10 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<v:AppWindowBase xmlns:v="using:OpenUtau.App.Views" xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="using:OpenUtau.App.ViewModels"
         mc:Ignorable="d" MinWidth="200" MinHeight="200" Width="350" Height="350"
         x:Class="OpenUtau.App.Views.VoiceColorMappingDialog"
-        Icon="/Assets/open-utau.ico"
         Title="{DynamicResource dialogs.voicecolorremapping}"
         WindowStartupLocation="CenterOwner"
         x:DataType="vm:VoiceColorMappingViewModel">
@@ -35,4 +34,4 @@
       <Button Content="{DynamicResource button.cancel}" Click="Cancel_OnClick" Width="100"/>
     </StackPanel>
   </Grid>
-</Window>
+</v:AppWindowBase>

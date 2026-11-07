@@ -6,7 +6,7 @@ using OpenUtau.App.ViewModels;
 using OpenUtau.Core;
 
 namespace OpenUtau.App.Views {
-    public partial class PackageManagerDialog : Window {
+    public partial class PackageManagerDialog : AppWindowBase {
         public PackageManagerDialog() {
             InitializeComponent();
         }

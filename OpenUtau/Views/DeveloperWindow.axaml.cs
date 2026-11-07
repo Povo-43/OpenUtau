@@ -7,7 +7,7 @@ using OpenUtau.Core.Js;
 using Serilog;
 
 namespace OpenUtau.App.Views {
-    public partial class DeveloperWindow : Window {
+    public partial class DeveloperWindow : AppWindowBase {
         DeveloperViewModel viewModel;
 
         public DeveloperWindow() {

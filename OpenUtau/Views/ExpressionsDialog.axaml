@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<v:AppWindowBase xmlns:v="using:OpenUtau.App.Views" xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -8,19 +8,18 @@
         mc:Ignorable="d"
         x:Class="OpenUtau.App.Views.ExpressionsDialog"
         x:DataType="vm:ExpressionsViewModel"
-        Icon="/Assets/open-utau.ico"
         Title="{Binding WindowTitle}"
         WindowStartupLocation="CenterScreen"
         MinWidth="640" MinHeight="440" Width="1000" Height="640">
   <Design.DataContext>
     <vm:ExpressionsViewModel/>
   </Design.DataContext>
-  <Window.Styles>
+  <v:AppWindowBase.Styles>
     <StyleInclude Source="/Styles/PianoRollStyles.axaml"/>
-  </Window.Styles>
+  </v:AppWindowBase.Styles>
 
   <!-- One tab row: the project's and the track's expressions share the editor below, the graphs have their own. -->
-  <DockPanel Margin="{Binding $parent[Window].WindowDecorationMargin}">
+  <DockPanel>
     <TabStrip Name="Tabs" DockPanel.Dock="Top" SelectedIndex="{Binding Page}">
       <TabStripItem Content="{DynamicResource exps.project}"/>
       <TabStripItem Content="{DynamicResource exps.track}" IsVisible="{Binding IsSwitchVisible}"/>
@@ -142,4 +141,4 @@
       <ac:ExpressionGraphEditor Name="GraphEditor" IsVisible="{Binding IsGraphsPage}"/>
     </Panel>
   </DockPanel>
-</Window>
+</v:AppWindowBase>

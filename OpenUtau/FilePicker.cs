@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
@@ -87,13 +88,13 @@ namespace OpenUtau.App {
         };
 
         public async static Task<string?> OpenFile(
-            Window window, string titleKey, params FilePickerFileType[] types) {
-            return await OpenFile(window, titleKey, null, types);
+            Visual? visual, string titleKey, params FilePickerFileType[] types) {
+            return await OpenFile(visual, titleKey, null, types);
         }
 
         public async static Task<string?> OpenFileAboutSinger(
-            Window window, string titleKey, params FilePickerFileType[] types) {
-            var path = await OpenFile(window, titleKey, Preferences.Default.RecentOpenSingerDirectory, types);
+            Visual? visual, string titleKey, params FilePickerFileType[] types) {
+            var path = await OpenFile(visual, titleKey, Preferences.Default.RecentOpenSingerDirectory, types);
             var dir = Path.GetDirectoryName(path);
             if (dir != null) {
                 Preferences.Default.RecentOpenSingerDirectory = dir;
@@ -103,8 +104,8 @@ namespace OpenUtau.App {
         }
 
         public async static Task<string?> OpenFileAboutProject(
-            Window window, string titleKey, params FilePickerFileType[] types) {
-            var path = await OpenFile(window, titleKey, Preferences.Default.RecentOpenProjectDirectory, types);
+            Visual? visual, string titleKey, params FilePickerFileType[] types) {
+            var path = await OpenFile(visual, titleKey, Preferences.Default.RecentOpenProjectDirectory, types);
             var dir = Path.GetDirectoryName(path);
             if (dir != null) {
                 Preferences.Default.RecentOpenProjectDirectory = dir;
@@ -114,10 +115,10 @@ namespace OpenUtau.App {
         }
 
         public async static Task<string?> OpenFile(
-            Window window, string titleKey, string? startLocation, params FilePickerFileType[] types) {
+            Visual? visual, string titleKey, string? startLocation, params FilePickerFileType[] types) {
             var location = startLocation == null
                 ? null
-                : await window.StorageProvider.TryGetFolderFromPathAsync(startLocation);
+                : await TopLevel.GetTopLevel(visual)!.StorageProvider.TryGetFolderFromPathAsync(startLocation);
         #if MACOS
             // Due to an avalonia bug, we need to call the native API for looking for APP
             if (types.Contains(APP)) {
@@ -158,9 +159,9 @@ namespace OpenUtau.App {
         #endif
 
 #if ANDROID
-            return await OpenFileAndroid(window, titleKey, startLocation, types);
+            return await OpenFileAndroid(visual, titleKey, startLocation, types);
 #else
-            var files = await window.StorageProvider.OpenFilePickerAsync(
+            var files = await TopLevel.GetTopLevel(visual)!.StorageProvider.OpenFilePickerAsync(
                 new FilePickerOpenOptions() {
                     Title = ThemeManager.GetString(titleKey),
                     AllowMultiple = false,
@@ -176,11 +177,11 @@ namespace OpenUtau.App {
 
 #if ANDROID
         private static async Task<string?> OpenFileAndroid(
-            Window window, string titleKey, string? startLocation, params FilePickerFileType[] types) {
+            Visual? visual, string titleKey, string? startLocation, params FilePickerFileType[] types) {
             var location = startLocation == null
                 ? null
-                : await window.StorageProvider.TryGetFolderFromPathAsync(startLocation);
-            var files = await window.StorageProvider.OpenFilePickerAsync(
+                : await TopLevel.GetTopLevel(visual)!.StorageProvider.TryGetFolderFromPathAsync(startLocation);
+            var files = await TopLevel.GetTopLevel(visual)!.StorageProvider.OpenFilePickerAsync(
                 new FilePickerOpenOptions() {
                     Title = ThemeManager.GetString(titleKey),
                     AllowMultiple = false,
@@ -203,8 +204,8 @@ namespace OpenUtau.App {
 #endif
 
         public async static Task<string[]?> OpenFilesAboutProject(
-                Window window, string titleKey, params FilePickerFileType[] types) {
-            var result = await OpenFiles(window, titleKey, Preferences.Default.RecentOpenProjectDirectory, types);
+                Visual? visual, string titleKey, params FilePickerFileType[] types) {
+            var result = await OpenFiles(visual, titleKey, Preferences.Default.RecentOpenProjectDirectory, types);
             if (result != null) {
                 var dir = Path.GetDirectoryName(result.FirstOrDefault());
                 if (dir != null) {
@@ -216,14 +217,14 @@ namespace OpenUtau.App {
         }
 
         public async static Task<string[]?> OpenFiles(
-            Window window, string titleKey, string? startLocation, params FilePickerFileType[] types) {
+            Visual? visual, string titleKey, string? startLocation, params FilePickerFileType[] types) {
 #if ANDROID
-            return await OpenFilesAndroid(window, titleKey, startLocation, types);
+            return await OpenFilesAndroid(visual, titleKey, startLocation, types);
 #else
             var location = startLocation == null
                 ? null
-                : await window.StorageProvider.TryGetFolderFromPathAsync(startLocation);
-            var files = await window.StorageProvider.OpenFilePickerAsync(
+                : await TopLevel.GetTopLevel(visual)!.StorageProvider.TryGetFolderFromPathAsync(startLocation);
+            var files = await TopLevel.GetTopLevel(visual)!.StorageProvider.OpenFilePickerAsync(
                 new FilePickerOpenOptions() {
                     Title = ThemeManager.GetString(titleKey),
                     AllowMultiple = true,
@@ -239,11 +240,11 @@ namespace OpenUtau.App {
 
 #if ANDROID
         private static async Task<string[]?> OpenFilesAndroid(
-            Window window, string titleKey, string? startLocation, params FilePickerFileType[] types) {
+            Visual? visual, string titleKey, string? startLocation, params FilePickerFileType[] types) {
             var location = startLocation == null
                 ? null
-                : await window.StorageProvider.TryGetFolderFromPathAsync(startLocation);
-            var files = await window.StorageProvider.OpenFilePickerAsync(
+                : await TopLevel.GetTopLevel(visual)!.StorageProvider.TryGetFolderFromPathAsync(startLocation);
+            var files = await TopLevel.GetTopLevel(visual)!.StorageProvider.OpenFilePickerAsync(
                 new FilePickerOpenOptions() {
                     Title = ThemeManager.GetString(titleKey),
                     AllowMultiple = true,
@@ -269,8 +270,8 @@ namespace OpenUtau.App {
         }
 #endif
 
-        public async static Task<string?> OpenFolderAboutSinger(Window window, string titleKey) {
-            var dir = await OpenFolder(window, titleKey, Preferences.Default.RecentOpenSingerDirectory);
+        public async static Task<string?> OpenFolderAboutSinger(Visual? visual, string titleKey) {
+            var dir = await OpenFolder(visual, titleKey, Preferences.Default.RecentOpenSingerDirectory);
             if (dir != null) {
                 Preferences.Default.RecentOpenSingerDirectory = dir;
                 Preferences.Save();
@@ -278,11 +279,11 @@ namespace OpenUtau.App {
             return dir;
         }
 
-        public async static Task<string?> OpenFolder(Window window, string titleKey, string? startLocation) {
+        public async static Task<string?> OpenFolder(Visual? visual, string titleKey, string? startLocation) {
             var location = startLocation == null
                 ? null
-                : await window.StorageProvider.TryGetFolderFromPathAsync(startLocation);
-            var dirs = await window.StorageProvider.OpenFolderPickerAsync(
+                : await TopLevel.GetTopLevel(visual)!.StorageProvider.TryGetFolderFromPathAsync(startLocation);
+            var dirs = await TopLevel.GetTopLevel(visual)!.StorageProvider.OpenFolderPickerAsync(
                 new FolderPickerOpenOptions {
                     Title = ThemeManager.GetString(titleKey),
                     AllowMultiple = false,
@@ -295,13 +296,13 @@ namespace OpenUtau.App {
         }
 
         public async static Task<string?> SaveFile
-            (Window window, string titleKey, params FilePickerFileType[] types) {
-            return await SaveFile(window, titleKey, null, null, types);
+            (Visual? visual, string titleKey, params FilePickerFileType[] types) {
+            return await SaveFile(visual, titleKey, null, null, types);
         }
 
         public async static Task<string?> SaveFileAboutProject
-            (Window window, string titleKey, params FilePickerFileType[] types) {
-            var path = await SaveFile(window, titleKey, Preferences.Default.RecentOpenProjectDirectory, 
+            (Visual? visual, string titleKey, params FilePickerFileType[] types) {
+            var path = await SaveFile(visual, titleKey, Preferences.Default.RecentOpenProjectDirectory, 
                 Path.GetFileName(Path.ChangeExtension(DocManager.Inst.Project.FilePath, null)), types);
             var dir = Path.GetDirectoryName(path);
             if (dir != null) {
@@ -312,15 +313,15 @@ namespace OpenUtau.App {
         }
 
         public async static Task<string?> SaveFile
-            (Window window, string titleKey, string? startLocation, string? filename, params FilePickerFileType[] types) {
+            (Visual? visual, string titleKey, string? startLocation, string? filename, params FilePickerFileType[] types) {
 #if ANDROID
-            return await SaveFileAndroid(window, titleKey, startLocation, filename, types);
+            return await SaveFileAndroid(visual, titleKey, startLocation, filename, types);
 #else
             var location = startLocation == null
                 ? null
-                : await window.StorageProvider.TryGetFolderFromPathAsync(startLocation);
+                : await TopLevel.GetTopLevel(visual)!.StorageProvider.TryGetFolderFromPathAsync(startLocation);
 
-            var file = await window.StorageProvider.SaveFilePickerAsync(
+            var file = await TopLevel.GetTopLevel(visual)!.StorageProvider.SaveFilePickerAsync(
                  new FilePickerSaveOptions {
                      Title = ThemeManager.GetString(titleKey),
                      FileTypeChoices = types,
@@ -334,11 +335,11 @@ namespace OpenUtau.App {
 
 #if ANDROID
         private static async Task<string?> SaveFileAndroid(
-            Window window, string titleKey, string? startLocation, string? filename, params FilePickerFileType[] types) {
+            Visual? visual, string titleKey, string? startLocation, string? filename, params FilePickerFileType[] types) {
             var location = startLocation == null
                 ? null
-                : await window.StorageProvider.TryGetFolderFromPathAsync(startLocation);
-            var file = await window.StorageProvider.SaveFilePickerAsync(
+                : await TopLevel.GetTopLevel(visual)!.StorageProvider.TryGetFolderFromPathAsync(startLocation);
+            var file = await TopLevel.GetTopLevel(visual)!.StorageProvider.SaveFilePickerAsync(
                  new FilePickerSaveOptions {
                      Title = ThemeManager.GetString(titleKey),
                      FileTypeChoices = types,

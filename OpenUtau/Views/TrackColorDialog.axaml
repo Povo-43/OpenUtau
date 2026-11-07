@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<v:AppWindowBase xmlns:v="using:OpenUtau.App.Views" xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -7,7 +7,6 @@
         x:DataType="vm:TrackColorViewModel"
         mc:Ignorable="d" Width="450" Height="130"
         x:Class="OpenUtau.App.Views.TrackColorDialog" WindowStartupLocation="CenterOwner"
-        Icon="/Assets/open-utau.ico"
         Title="{StaticResource tracks.trackcolor}"
         KeyDown="OnKeyDown">
   <Grid RowDefinitions="*,50" >
@@ -37,4 +36,4 @@
       <Button Content="{StaticResource button.apply}" MinWidth="50" Click="OnFinish"/>
     </StackPanel>
   </Grid>
-</Window>
+</v:AppWindowBase>

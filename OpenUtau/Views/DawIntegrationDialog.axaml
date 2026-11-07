@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<v:AppWindowBase xmlns:v="using:OpenUtau.App.Views" xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -6,7 +6,6 @@
         x:DataType="vm:DawIntegrationViewModel"
         mc:Ignorable="d" Width="680" Height="480" MinWidth="560" MinHeight="360"
         x:Class="OpenUtau.App.Views.DawIntegrationDialog"
-        Icon="/Assets/open-utau.ico"
         Title="{DynamicResource dawintegration.caption}"
         WindowStartupLocation="CenterOwner">
   <!-- Outer grid hosts the dialog content and, above it, the floating guide overlay. -->
@@ -153,4 +152,4 @@
       </Border>
     </Grid>
   </Grid>
-</Window>
+</v:AppWindowBase>

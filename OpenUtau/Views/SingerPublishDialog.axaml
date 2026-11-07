@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<v:AppWindowBase xmlns:v="using:OpenUtau.App.Views" xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -6,11 +6,10 @@
         mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="600"
         x:DataType="vm:SingerPublishViewModel"
         x:Class="OpenUtau.App.Views.SingerPublishDialog"
-        Icon="/Assets/open-utau.ico"
         WindowStartupLocation="CenterScreen"
         MinWidth="500" MinHeight="500" Width="500" Height="500"
         Title="{DynamicResource singers.publish}">
-  <Grid Margin="{Binding $parent[Window].WindowDecorationMargin}">
+  <Grid>
     <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible">
       <StackPanel Margin="5">
         <TextBlock Text="{DynamicResource singers.publish.description}"/>
@@ -24,4 +23,4 @@
       </StackPanel>
     </ScrollViewer>
   </Grid>
-</Window>
+</v:AppWindowBase>

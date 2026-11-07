@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+﻿<v:AppWindowBase xmlns:v="using:OpenUtau.App.Views" xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -8,7 +8,7 @@
         x:DataType="vm:MainWindowViewModel"
         x:Class="OpenUtau.App.Views.MainWindow"
         x:CompileBindings="True">
-    <UserControl.Styles>
+    <v:AppWindowBase.Styles>
     <Style Selector="Button,ToggleButton">
       <Setter Property="Focusable" Value="False"/>
     </Style>
@@ -20,9 +20,9 @@
       <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
       <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled"/>
     </Style>
-  </UserControl.Styles>
+  </v:AppWindowBase.Styles>
   <Grid>
-    <Grid Name="MainGrid" Margin="{Binding $parent[Window].WindowDecorationMargin}">
+    <Grid Name="MainGrid">
       <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Left"
                   Height="24" ZIndex="1">
         <Menu Height="24" Opened="OnMainMenuOpened" Closed="OnMainMenuClosed" PointerExited="OnMainMenuPointerLeave">
@@ -63,15 +63,6 @@
             <MenuItem Header="{DynamicResource menu.project.remaptimeaxis}" Click="OnMenuRemapTimeaxis"/>
           </MenuItem>
           <MenuItem Header="{DynamicResource menu.tools}">
-            <MenuItem Header="{DynamicResource menu.tools.layout}">
-              <MenuItem Header="{DynamicResource menu.tools.layout.reset}" Click="OnMenuLayoutReset"/>
-              <MenuItem Header="{DynamicResource menu.tools.layout.vsplit11}" Click="OnMenuLayoutVSplit11"/>
-              <MenuItem Header="{DynamicResource menu.tools.layout.vsplit12}" Click="OnMenuLayoutVSplit12"/>
-              <MenuItem Header="{DynamicResource menu.tools.layout.vsplit13}" Click="OnMenuLayoutVSplit13"/>
-              <MenuItem Header="{DynamicResource menu.tools.layout.hsplit11}" Click="OnMenuLayoutHSplit11"/>
-              <MenuItem Header="{DynamicResource menu.tools.layout.hsplit12}" Click="OnMenuLayoutHSplit12"/>
-              <MenuItem Header="{DynamicResource menu.tools.layout.hsplit13}" Click="OnMenuLayoutHSplit13"/>
-            </MenuItem>
             <MenuItem Header="{DynamicResource menu.tools.fullscreen}" InputGesture="F11" Click="OnMenuFullScreen"/>
             <MenuItem Header="{DynamicResource menu.tools.dawintegration}" Click="OnMenuDawIntegration"/>
             <MenuItem Header="{Binding ClearCacheHeader}" Click="OnMenuClearCache"/>
@@ -294,29 +285,29 @@
             <Border Classes="playback" HorizontalAlignment="Center">
               <StackPanel Orientation="Horizontal">
                 <Button Command="{Binding PlaybackViewModel.SeekStart}" Height="18">
-                  <Path Fill="{Binding $parent[Window].Foreground}" VerticalAlignment="Center" HorizontalAlignment="Center" Height="18" Width="18"
+                  <Path Fill="{Binding $parent[UserControl].Foreground}" VerticalAlignment="Center" HorizontalAlignment="Center" Height="18" Width="18"
                         Data="M5.35 4.3H7.44V13.7H5.35ZM7.44 9L12.65 4.3V13.7Z"/>
                 </Button>
                 <Button Click="OnPlayOrPause" Height="18">
-                  <Path Fill="{Binding $parent[Window].Foreground}" VerticalAlignment="Center" HorizontalAlignment="Center" Height="18" Width="18"
+                  <Path Fill="{Binding $parent[UserControl].Foreground}" VerticalAlignment="Center" HorizontalAlignment="Center" Height="18" Width="18"
                         Data="M5.35 4.3L12.65 9.01L5.35 13.7Z"/>
                 </Button>
                 <Button Command="{Binding PlaybackViewModel.Pause}" Height="18">
-                  <Path Fill="{Binding $parent[Window].Foreground}" VerticalAlignment="Center" HorizontalAlignment="Center" Height="18" Width="18"
+                  <Path Fill="{Binding $parent[UserControl].Foreground}" VerticalAlignment="Center" HorizontalAlignment="Center" Height="18" Width="18"
                         Data="M5.35 4.3H7.78V13.7H5.35ZM10.22 4.3H12.65V13.7H10.22Z"/>
                 </Button>
                 <Button Command="{Binding PlaybackViewModel.SeekEnd}" Height="18">
-                  <Path Fill="{Binding $parent[Window].Foreground}" VerticalAlignment="Center" HorizontalAlignment="Center" Height="18" Width="18"
+                  <Path Fill="{Binding $parent[UserControl].Foreground}" VerticalAlignment="Center" HorizontalAlignment="Center" Height="18" Width="18"
                         Data="M5.35 4.3L10.56 9L5.35 13.7ZM10.56 4.3H12.65V13.7H10.56Z"/>
                 </Button>
                 <ToggleButton IsChecked="{Binding PlaybackViewModel.LoopPlayback}"
                               ToolTip.Tip="{DynamicResource tip.playback.loop}" Height="18">
-                  <Path Fill="{Binding $parent[Window].Foreground}" VerticalAlignment="Center" HorizontalAlignment="Center" Height="18" Width="18"
+                  <Path Fill="{Binding $parent[UserControl].Foreground}" VerticalAlignment="Center" HorizontalAlignment="Center" Height="18" Width="18"
                         Data="M5.19 4.86H11.11V2.8l2.53 3.09-2.53 3.1V6.93H6.05V8.99H4.35V6.93c0-1.14.34-2.07.84-2.07ZM12.81 13.13H6.88v2.07L4.35 12.1l2.53-3.1V11.06h5.08V8.99H13.65v2.07c0 1.14-.34 2.07-.84 2.07Z"/>
                 </ToggleButton>
                 <ToggleButton IsChecked="{Binding PlaybackViewModel.Metronome}" Height="18"
                               ToolTip.Tip="{DynamicResource prefs.playback.metronome}">
-                  <Path Fill="{Binding $parent[Window].Foreground}" VerticalAlignment="Center" HorizontalAlignment="Center" Height="18" Width="18"
+                  <Path Fill="{Binding $parent[UserControl].Foreground}" VerticalAlignment="Center" HorizontalAlignment="Center" Height="18" Width="18"
                         Data="M7.93 4.3a.43.34 0 0 0-.41.25L4.33 13.25a.43.34 0 0 0 .41.45h8.5a.43.34 0 0 0 .41-.45L12.32 9.65l-1.89 1.36c-.09.56-.7 1.02-1.42 1.02-.78 0-1.44-.54-1.44-1.18 0-.64.66-1.18 1.44-1.18.01 0 .02 0 .03 0l2.61-1.85-1.2-3.27a.43.34 0 0 0-.41-.25ZM14.65 6.13a.8.66 0 0 0-.48.16L9.13 9.92a1.17.95 0 0 0-1.17.95 1.17.95 0 0 0 1.17.95 1.17.95 0 0 0 1.16-.9l5.06-3.65a.8.66 0 0 0 .07-.92.8.66 0 0 0-.66-.22Z"/>
                 </ToggleButton>
               </StackPanel>
@@ -412,14 +403,14 @@
                       Canvas.Left="{Binding PlayPosHighlightX, Mode=OneWay}"
                       Canvas.Top="0"
                       Fill="{DynamicResource NeutralAccentBrushSemi2}"
-                      IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).PlaybackViewModel.ShowPlayPosHighlight}"
+                      IsVisible="{Binding $parent[UserControl].((vm:MainWindowViewModel)DataContext).PlaybackViewModel.ShowPlayPosHighlight}"
                       IsHitTestVisible="False"/>
             <Rectangle Name="PlayPosLine"
                        Canvas.Left="{Binding PlayPosX}"
                        Canvas.Top="0" Width="1"
                        Height="{Binding $parent.Bounds.Height, Mode=OneWay}"
                        ZIndex="99" IsHitTestVisible="False"
-                       IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).PlaybackViewModel.IsPlaying}"
+                       IsVisible="{Binding $parent[UserControl].((vm:MainWindowViewModel)DataContext).PlaybackViewModel.IsPlaying}"
                        Fill="{DynamicResource AccentBrush2}"/>
             <Rectangle Name="SelectionBox" StrokeThickness="2"
                       Stroke="{DynamicResource SystemControlForegroundBaseHighBrush}"
@@ -482,5 +473,6 @@
         </Grid>
       </Carousel>
     </Grid>
+    <Panel Name="OverlayLayer" ZIndex="10000"/>
   </Grid>
-</UserControl>
+</v:AppWindowBase>

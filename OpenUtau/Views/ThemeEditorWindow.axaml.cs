@@ -7,7 +7,7 @@ using OpenUtau.App.ViewModels;
 using ReactiveUI;
 
 namespace OpenUtau.App.Views {
-    public partial class ThemeEditorWindow : Window {
+    public partial class ThemeEditorWindow : AppWindowBase {
 
         private static ThemeEditorWindow? _instance;
 

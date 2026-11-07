@@ -4,7 +4,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 
 namespace OpenUtau.App.Views {
-    public partial class TypeInDialog : Window {
+    public partial class TypeInDialog : AppWindowBase {
         public Action<string>? onFinish;
 
         public TypeInDialog() {

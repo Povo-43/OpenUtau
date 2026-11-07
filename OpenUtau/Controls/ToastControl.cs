@@ -1,4 +1,5 @@
 ﻿using System;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using OpenUtau.App.Views;
@@ -6,7 +7,7 @@ using OpenUtau.Core;
 
 namespace OpenUtau.App.Controls {
     public static class ToastControl {
-        public static Notification GetNotification(ToastNotification notif, Window window) {
+        public static Notification GetNotification(ToastNotification notif, Visual? window) {
             var message = ThemeManager.GetString(notif.translationKey);
             var type = NotificationType.Warning;
             switch (notif.type) {

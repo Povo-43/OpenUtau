@@ -4,7 +4,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 
 namespace OpenUtau.App.Views {
-    public partial class VoiceColorMappingDialog : Window {
+    public partial class VoiceColorMappingDialog : AppWindowBase {
         public Action? onFinish;
         public bool Apply { get; private set; } = false;
 

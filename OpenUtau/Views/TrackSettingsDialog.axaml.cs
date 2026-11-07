@@ -5,7 +5,7 @@ using OpenUtau.Core;
 using OpenUtau.Core.Ustx;
 
 namespace OpenUtau.App.Views {
-    public partial class TrackSettingsDialog : Window {
+    public partial class TrackSettingsDialog : AppWindowBase {
 
         TrackSettingsViewModel viewModel;
 

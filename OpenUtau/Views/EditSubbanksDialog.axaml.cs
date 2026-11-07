@@ -7,7 +7,7 @@ using OpenUtau.App.ViewModels;
 using OpenUtau.Core;
 
 namespace OpenUtau.App.Views {
-    public partial class EditSubbanksDialog : Window {
+    public partial class EditSubbanksDialog : AppWindowBase {
         internal readonly EditSubbanksViewModel ViewModel;
 
         internal Action? RefreshSinger;

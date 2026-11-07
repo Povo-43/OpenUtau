@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -17,7 +17,7 @@ namespace OpenUtau.App.Views {
     /// once per dialog session while nothing is installed and nothing is discovered — the
     /// moment the feature would otherwise look dead.
     /// </remarks>
-    public partial class DawIntegrationDialog : Window {
+    public partial class DawIntegrationDialog : AppWindowBase {
         private bool guideAutoShown;
 
         public DawIntegrationDialog() {

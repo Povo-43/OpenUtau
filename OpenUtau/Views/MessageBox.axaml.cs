@@ -16,7 +16,7 @@ using Serilog;
 using SharpCompress;
 
 namespace OpenUtau.App.Views {
-    public partial class MessageBox : Window {
+    public partial class MessageBox : AppWindowBase {
         public enum MessageBoxButtons { Ok, OkCancel, YesNo, YesNoCancel, OkCopy }
         public enum MessageBoxResult { Ok, Cancel, Yes, No }
 
@@ -30,7 +30,7 @@ namespace OpenUtau.App.Views {
             });
         }
 
-        public static Task<MessageBoxResult> ShowError(Window parent, Exception? e, string message = "", bool fromNotif = false) {
+        public static Task<MessageBoxResult> ShowError(Visual? parent, Exception? e, string message = "", bool fromNotif = false) {
             string text = message;
             string title = ThemeManager.GetString("errors.caption");
             if (fromNotif) {
@@ -121,7 +121,7 @@ namespace OpenUtau.App.Views {
             }
         }
 
-        public static Task<MessageBoxResult> Show(Window parent, string text, string title, MessageBoxButtons buttons, string? stackTrace = null) {
+        public static Task<MessageBoxResult> Show(Visual? parent, string text, string title, MessageBoxButtons buttons, string? stackTrace = null) {
             var msgbox = new MessageBox() {
                 Title = title
             };
@@ -160,7 +160,7 @@ namespace OpenUtau.App.Views {
                 var btn = new Button { Content = ThemeManager.GetString("dialogs.messagebox.copy") };
                 btn.Click += (_, __) => {
                     try {
-                        GetTopLevel(parent)?.Clipboard?.SetTextAsync(text + "\n" + stackTrace);
+                        TopLevel.GetTopLevel(parent)?.Clipboard?.SetTextAsync(text + "\n" + stackTrace);
                     } catch { }
                 };
                 msgbox.Buttons.Children.Add(btn);
@@ -174,7 +174,7 @@ namespace OpenUtau.App.Views {
             return tcs.Task;
         }
 
-        public static MessageBox ShowModal(Window parent, string text, string title) {
+        public static MessageBox ShowModal(Visual? parent, string text, string title) {
             var msgbox = new MessageBox() {
                 Title = title
             };
@@ -198,7 +198,7 @@ namespace OpenUtau.App.Views {
         /// operations to be performed once the asynchronous action completes.
         /// </remarks>
         public static Task<MessageBoxResult> ShowProcessing(
-                Window parent, 
+                Visual? parent, 
                 string text, 
                 string title, 
                 Action<MessageBox, 

@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<v:AppWindowBase xmlns:v="using:OpenUtau.App.Views" xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -6,7 +6,6 @@
         x:DataType="vm:ThemeEditorViewModel"
         mc:Ignorable="d" MinWidth="325" Width="325" Height="500"
         x:Class="OpenUtau.App.Views.ThemeEditorWindow" WindowStartupLocation="CenterOwner"
-        Icon="/Assets/open-utau.ico"
         Title="{DynamicResource themeeditor.title}"
         Closing="WindowClosing" Topmost="True">
   <Grid RowDefinitions="*,auto" Margin="0,10,0,10">
@@ -156,4 +155,4 @@
       <Button Grid.Column="2" Content="{DynamicResource button.save}" HorizontalAlignment="Stretch" Click="OnSave"/>
     </Grid>
   </Grid>
-</Window>
+</v:AppWindowBase>

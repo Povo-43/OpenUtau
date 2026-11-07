@@ -1,7 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
 using OpenUtau.App.Views;
 using OpenUtau.Core;
@@ -20,7 +21,7 @@ namespace OpenUtau.App {
         /// Offers to install whichever of the packages are missing, then pre-renders again. One prompt
         /// at a time; after a failure, packages the user declined this session are not offered again.
         /// </summary>
-        public static async Task EnsureInstalledAsync(Window parent, IEnumerable<string> packageIds, bool afterFailure) {
+        public static async Task EnsureInstalledAsync(Visual? parent, IEnumerable<string> packageIds, bool afterFailure) {
             var missing = packageIds.Distinct().Where(id => PackageManager.Inst.GetInstalledPath(id) == null).ToArray();
             if (missing.Length == 0 || busy || afterFailure && missing.All(declined.Contains)) {
                 return;

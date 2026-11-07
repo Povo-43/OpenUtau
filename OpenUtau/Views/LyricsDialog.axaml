@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<v:AppWindowBase xmlns:v="using:OpenUtau.App.Views" xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -6,12 +6,11 @@
         x:DataType="vm:LyricsViewModel"
         mc:Ignorable="d" MinWidth="400" MinHeight="200" Width="600" Height="300"
         x:Class="OpenUtau.App.Views.LyricsDialog" WindowStartupLocation="CenterOwner"
-        Icon="/Assets/open-utau.ico"
         Title="{DynamicResource lyrics.caption}"
         Opened="OnOpened">
-  <Window.Styles>
+  <v:AppWindowBase.Styles>
     <StyleInclude Source="/Styles/PianoRollStyles.axaml"/>
-  </Window.Styles>
+  </v:AppWindowBase.Styles>
   <Grid Margin="10,10,10,4" RowDefinitions="*,6,Auto,4,Auto">
     <TextBox Name="DIALOG_Box" Grid.Row="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
              AcceptsReturn="True" AcceptsTab="False" TextWrapping="Wrap" Height="NaN"
@@ -71,4 +70,4 @@
       <Button Content="{DynamicResource button.apply}" Margin="0" Click="OnFinish"/>
     </StackPanel>
   </Grid>
-</Window>
+</v:AppWindowBase>

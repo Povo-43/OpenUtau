@@ -8,7 +8,7 @@ using OpenUtau.Core;
 using Org.BouncyCastle.Tls;
 
 namespace OpenUtau.App.Views {
-    public partial class TrackColorDialog : Window {
+    public partial class TrackColorDialog : AppWindowBase {
         public TrackColorDialog() {
             InitializeComponent();
         }

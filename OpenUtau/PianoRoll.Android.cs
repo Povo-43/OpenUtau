@@ -31,9 +31,6 @@ public partial class PianoRoll {
         // (Avalonia.Android already maps touch to LeftButton by default)
     }
 
-    // Android: no MainWindow concept; return null so MainWindow?.X() calls are no-ops
-    public MainWindow? MainWindow => null;
-
     partial void InitializeTouchSupport() {
         _longPressTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(LongPressDelayMs) };
         _longPressTimer.Tick += OnLongPressTick;

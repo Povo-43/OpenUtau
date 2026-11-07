@@ -5,7 +5,7 @@ using Avalonia.Interactivity;
 using OpenUtau.App.ViewModels;
 
 namespace OpenUtau.App.Views {
-    public partial class LyricsDialog : Window {
+    public partial class LyricsDialog : AppWindowBase {
         public LyricsDialog() {
             InitializeComponent();
             DIALOG_Box.AddHandler(KeyDownEvent, TextBoxKeyDown, RoutingStrategies.Tunnel);

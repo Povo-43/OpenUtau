@@ -1,3 +1,4 @@
+﻿using Avalonia;
 using System;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
@@ -11,7 +12,7 @@ namespace OpenUtau.App.Views {
     /// The project's or a track's expressions, and the expression graphs, in one window. It doesn't block the
     /// main window, so a graph can be edited while listening and watching the piano roll.
     /// </summary>
-    public partial class ExpressionsDialog : Window, ICmdSubscriber {
+    public partial class ExpressionsDialog : AppWindowBase, ICmdSubscriber {
         static ExpressionsDialog? open;
 
         readonly UTrack? track;
@@ -30,7 +31,7 @@ namespace OpenUtau.App.Views {
         /// Opens the window for the project, or for a track's expressions, bringing it to the front if it's
         /// already open for the same one.
         /// </summary>
-        public static ExpressionsDialog Open(Window owner, UTrack? track = null) {
+        public static ExpressionsDialog Open(Visual? owner, UTrack? track = null) {
             if (open != null && open.track == track) {
                 open.Activate();
                 return open;

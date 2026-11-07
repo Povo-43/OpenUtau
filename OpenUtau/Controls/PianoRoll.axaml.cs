@@ -11,6 +11,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using OpenUtau.App.ViewModels;
 using OpenUtau.App.Views;
 using OpenUtau.Core;
@@ -30,9 +31,7 @@ namespace OpenUtau.App.Controls {
     }
 
     public partial class PianoRoll : UserControl, IValueTip, ICmdSubscriber {
-#if !ANDROID
         public MainWindow? MainWindow { get; set; }
-#endif
         public PianoRollViewModel ViewModel;
 #if ANDROID
         partial void InitializeTouchSupport();
@@ -57,7 +56,7 @@ namespace OpenUtau.App.Controls {
         private ReactiveCommand<RxVoid, RxVoid>? noteDefaultsCommand;
         private ReactiveCommand<BatchEdit, RxVoid>? noteBatchEditCommand;
 
-        private Window RootWindow => (Window)TopLevel.GetTopLevel(this)!;
+        private Visual? RootWindow => TopLevel.GetTopLevel(this);
 
         private readonly ValueGlide hScroll;
         private readonly ValueGlide vScroll;
@@ -106,11 +105,6 @@ namespace OpenUtau.App.Controls {
                 }
                 try {
                     if (edit.IsAsync) {
-#if !ANDROID
-                        var mainWindow =
-                            (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)
-                            ?.MainWindow! as MainWindow;
-#endif
                         var name = ThemeManager.GetString(edit.Name);
                         await MessageBox.ShowProcessing(RootWindow, $"{name} - ? / ?",
                             ThemeManager.GetString("pianoroll.menu.batch.running"),
@@ -334,9 +328,11 @@ namespace OpenUtau.App.Controls {
             MessageBus.Current.SendMessage(new PianorollRefreshEvent("TrackColor"));
         }
         void OnMenuFullScreen(object sender, RoutedEventArgs args) {
-            RootWindow.WindowState = RootWindow.WindowState == WindowState.FullScreen
-                ? WindowState.Normal
-                : WindowState.FullScreen;
+            if (MainWindow != null) {
+                MainWindow.WindowState = MainWindow.WindowState == WindowState.FullScreen
+                    ? WindowState.Normal
+                    : WindowState.FullScreen;
+            }
         }
         void OnMenuDegreeStyle(object sender, RoutedEventArgs args) {
             if (sender is MenuItem menu && int.TryParse(menu.Tag?.ToString(), out int tag)) {
@@ -371,7 +367,7 @@ namespace OpenUtau.App.Controls {
             if (MainWindow != null) {
                 await MainWindow.OpenSingersWindowAsync();
             }
-            RootWindow.Activate();
+            MainWindow?.Activate();
             try {
                 USinger? singer = null;
                 UOto? oto = null;
@@ -399,7 +395,7 @@ namespace OpenUtau.App.Controls {
         }
 
         void OnHidePianoRoll(object sender, RoutedEventArgs args) {
-            if (RootWindow.DataContext is MainWindowViewModel mwvm) {
+            if (MainWindow?.DataContext is MainWindowViewModel mwvm) {
                 mwvm.ShowPianoRoll = false;
             }
         }
@@ -1399,7 +1395,7 @@ namespace OpenUtau.App.Controls {
                             if (MainWindow != null) {
                                 await MainWindow.OpenSingersWindowAsync();
                             }
-                            RootWindow.Activate();
+                            MainWindow?.Activate();
                             DocManager.Inst.ExecuteCmd(new GotoOtoNotification(singer, hitAliasInfo.phoneme.oto));
                         }
                         return;
@@ -1613,13 +1609,14 @@ namespace OpenUtau.App.Controls {
                 return;
             }
 
-            if (RootWindow.FocusManager != null) {
-                if (RootWindow.FocusManager.GetFocusedElement() is TextBox focusedTextBox) {
+            var focusManager = MainWindow?.FocusManager ?? TopLevel.GetTopLevel(this)?.FocusManager;
+            if (focusManager != null) {
+                if (focusManager.GetFocusedElement() is TextBox focusedTextBox) {
                     if (focusedTextBox.IsEnabled && focusedTextBox.IsEffectivelyVisible && focusedTextBox.IsFocused) {
                         args.Handled = false;
                         return;
                     }
-                } else if (RootWindow.FocusManager.GetFocusedElement() is ComboBox or ComboBoxItem) {
+                } else if (focusManager.GetFocusedElement() is ComboBox or ComboBoxItem) {
                     args.Handled = false;
                     return;
                 }
@@ -1746,8 +1743,8 @@ namespace OpenUtau.App.Controls {
                     break;
                 case Key.F4:
                     if (isAlt) {
-                        if (RootWindow is PianoRollDetachedWindow) {
-                            RootWindow.Hide();
+                        if (this.FindAncestorOfType<PianoRollDetachedWindow>() is { } detached) {
+                            detached.Hide();
                         }
                         return true;
                     }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
@@ -164,7 +164,8 @@ namespace OpenUtau.App.Controls {
         /// <summary>Saves the selected graph with the definitions of the expressions it uses.</summary>
         async void OnExport(object? sender, RoutedEventArgs e) {
             var graph = SelectedGraph;
-            if (graph == null || TopLevel.GetTopLevel(this) is not Window window) {
+            var window = TopLevel.GetTopLevel(this);
+            if (graph == null || window == null) {
                 return;
             }
             var path = await FilePicker.SaveFile(window, "expressiongraph.export", null,
@@ -184,7 +185,8 @@ namespace OpenUtau.App.Controls {
         /// expressions it added and which the project already defines differently.
         /// </summary>
         async void OnImport(object? sender, RoutedEventArgs e) {
-            if (TopLevel.GetTopLevel(this) is not Window window) {
+            var window = TopLevel.GetTopLevel(this);
+            if (window == null) {
                 return;
             }
             var path = await FilePicker.OpenFile(window, "expressiongraph.import", FilePicker.ExpressionGraph);

@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -7,7 +7,7 @@ using OpenUtau.Core;
 using OpenUtau.Core.Analysis;
 
 namespace OpenUtau.App.Views {
-    public partial class TranscribeDialog : Window {
+    public partial class TranscribeDialog : AppWindowBase {
         public bool Confirmed { get; private set; }
 
         public TranscribeDialog() {

@@ -3,7 +3,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 
 namespace OpenUtau.App.Views {
-    public partial class PasteParamDialog : Window {
+    public partial class PasteParamDialog : AppWindowBase {
         public bool Apply { get; private set; } = false;
 
         public PasteParamDialog() {

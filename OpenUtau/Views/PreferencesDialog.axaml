@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<v:AppWindowBase xmlns:v="using:OpenUtau.App.Views" xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -6,14 +6,13 @@
         mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="460"
         x:DataType="vm:PreferencesViewModel"
         x:Class="OpenUtau.App.Views.PreferencesDialog"
-        Icon="/Assets/open-utau.ico"
         Title="{DynamicResource prefs.caption}"
         WindowStartupLocation="CenterScreen"
         Width="700" Height="460">
-  <Window.Resources>
+  <v:AppWindowBase.Resources>
     <vm:CultureNameConverter x:Key="cultureNameConverter"/>
-  </Window.Resources>
-  <Window.Styles>
+  </v:AppWindowBase.Resources>
+  <v:AppWindowBase.Styles>
     <Style Selector="StackPanel">
       <Setter Property="Spacing" Value="4"/>
     </Style>
@@ -53,8 +52,8 @@
       <Setter Property="OffContent" Value="{DynamicResource button.off}"/>
       <Setter Property="HorizontalAlignment" Value="Right"/>
     </Style>
-  </Window.Styles>
-  <Grid Margin="{Binding $parent[Window].WindowDecorationMargin}" ColumnDefinitions="150,*">
+  </v:AppWindowBase.Styles>
+  <Grid ColumnDefinitions="150,*">
     <ListBox Classes="NoScroll" Name="DrawerList">
       <ListBox.Styles>
         <Style Selector="ListBoxItem">
@@ -472,4 +471,4 @@
       </Carousel>
     </ScrollViewer>
   </Grid>
-</Window>
+</v:AppWindowBase>

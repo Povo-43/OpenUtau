@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<v:AppWindowBase xmlns:v="using:OpenUtau.App.Views" xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:system="clr-namespace:System;assembly=mscorlib"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -8,13 +8,12 @@
         x:DataType="vm:SingersViewModel"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="640"
         x:Class="OpenUtau.App.Views.SingersDialog"
-        Icon="/Assets/open-utau.ico"
         Title="{DynamicResource singers.caption}" Width="1050" MinWidth="1050" MinHeight="640"
         WindowStartupLocation="CenterScreen" KeyDown="OnKeyDown">
   <Design.DataContext>
     <vm:SingersViewModel/>
   </Design.DataContext>
-  <Grid Margin="{Binding $parent[Window].WindowDecorationMargin}">
+  <Grid>
     <Grid.RowDefinitions>
       <RowDefinition Height="140" MinHeight="140"/>
       <RowDefinition Height="10"/>
@@ -286,4 +285,4 @@
       </TabItem>
     </TabControl>
   </Grid>
-</Window>
+</v:AppWindowBase>

@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<v:AppWindowBase xmlns:v="using:OpenUtau.App.Views" xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -6,11 +6,10 @@
         x:DataType="vm:LyricsReplaceViewModel"
         mc:Ignorable="d" MinWidth="200" MinHeight="200" Width="300" Height="350"
         x:Class="OpenUtau.App.Views.LyricsReplaceDialog"  WindowStartupLocation="CenterOwner"
-        Icon="/Assets/open-utau.ico"
         Title="{DynamicResource lyricsreplace.replace}">
-  <Window.Styles>
+  <v:AppWindowBase.Styles>
     <StyleInclude Source="/Styles/PianoRollStyles.axaml"/>
-  </Window.Styles>
+  </v:AppWindowBase.Styles>
   <Grid Margin="10" RowDefinitions="auto,10,Auto,10,Auto,10,*,10,Auto">
     <StackPanel Orientation="Horizontal" Grid.Row="0">
       <TextBlock Text="{DynamicResource lyricsreplace.before}" />
@@ -39,4 +38,4 @@
       <Button Content="{DynamicResource button.apply}" Margin="0" MinWidth="50" Click="OnFinish"/>
     </StackPanel>
   </Grid>
-</Window>
+</v:AppWindowBase>

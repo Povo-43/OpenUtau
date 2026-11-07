@@ -32,7 +32,7 @@ using Path = System.IO.Path;
 using Point = Avalonia.Point;
 
 namespace OpenUtau.App.Views {
-    public partial class MainWindow : UserControl, ICmdSubscriber {
+    public partial class MainWindow : AppWindowBase, ICmdSubscriber {
         private readonly KeyModifiers cmdKey =
             OS.IsMacOS() ? KeyModifiers.Meta : KeyModifiers.Control;
         private readonly MainWindowViewModel viewModel;
@@ -44,7 +44,34 @@ namespace OpenUtau.App.Views {
 
         private PianoRollDetachedWindow? pianoRollWindow;
         private PianoRoll? pianoRoll;
-        private WindowNotificationManager notificationManager;
+        private WindowNotificationManager? notificationManager;
+
+        /// <summary>The single live main view. Used by the pseudo-window host.</summary>
+        public static MainWindow? Instance { get; private set; }
+
+        /// <summary>Stack of pseudo windows shown on Android (empty on desktop).</summary>
+        public Panel? OverlayHost => OverlayLayer;
+
+        protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e) {
+            base.OnAttachedToVisualTree(e);
+            Instance = this;
+            if (notificationManager == null) {
+                var topLevel = TopLevel.GetTopLevel(this);
+                if (topLevel != null) {
+                    notificationManager = new WindowNotificationManager(topLevel) {
+                        Position = NotificationPosition.BottomCenter,
+                        MaxItems = 3
+                    };
+                }
+            }
+        }
+
+        protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e) {
+            base.OnDetachedFromVisualTree(e);
+            if (Instance == this) {
+                Instance = null;
+            }
+        }
 
         private PartEditState? partEditState;
 
@@ -56,7 +83,7 @@ namespace OpenUtau.App.Views {
         private readonly DispatcherTimer timer;
         private readonly DispatcherTimer autosaveTimer;
 #if !ANDROID
-        private bool forceClose;
+        private bool forceClose = false;
 #endif
 
         private bool shouldOpenPartsContextMenu;
@@ -79,7 +106,7 @@ namespace OpenUtau.App.Views {
             Log.Information("Initialized main window component.");
 
             // Edit commands validate once per frame instead of once per pointer move.
-            DocManager.Inst.RequestFrame = action => RequestAnimationFrame(_ => action());
+            DocManager.Inst.RequestFrame = action => Dispatcher.UIThread.Post(action, DispatcherPriority.Render);
 
             var smoothViewport = new SmoothViewport(this);
             hScroll = smoothViewport.Scroll(HScrollBar);
@@ -113,11 +140,6 @@ namespace OpenUtau.App.Views {
                 DispatcherPriority.Normal,
                 (sender, args) => DocManager.Inst.AutoSave());
             autosaveTimer.Start();
-
-            notificationManager = new WindowNotificationManager(this) {
-                Position = NotificationPosition.BottomCenter,
-                MaxItems = 3
-            };
 
             PartRenameCommand = ReactiveCommand.Create<UPart>(part => RenamePart(part));
             PartGotoFileCommand = ReactiveCommand.Create<UPart>(part => GotoFile(part));
@@ -641,13 +663,8 @@ namespace OpenUtau.App.Views {
         }
 
         public async Task OpenSingersWindowAsync() {
-            var lifetime = Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
-            if (lifetime == null) {
-                return;
-            }
-
             LoadingWindow.BeginLoadingImmediate(this);
-            var dialog = await Task.Run(() => lifetime.Windows.FirstOrDefault(w => w is SingersDialog));
+            var dialog = DialogHost.Find<SingersDialog>();
             try {
                 if (dialog == null) {
                     SingersViewModel vm = await Task.Run<SingersViewModel>(() => {
@@ -682,7 +699,11 @@ namespace OpenUtau.App.Views {
             }
         }
 
-        private static void ShowToolWindow(Window window) {
+        private static void ShowToolWindow(AppWindowBase window) {
+            if (DialogHost.IsOpen(window)) {
+                window.Activate();
+                return;
+            }
             if (window.WindowState == WindowState.Minimized) {
                 window.WindowState = WindowState.Normal;
             }
@@ -723,11 +744,7 @@ namespace OpenUtau.App.Views {
 
         void OnMenuPackageManager(object sender, RoutedEventArgs args) {
             try {
-                var desktop = Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
-                if (desktop == null) {
-                    return;
-                }
-                var dialog = desktop.Windows.FirstOrDefault(w => w is PackageManagerDialog) as PackageManagerDialog;
+                var dialog = DialogHost.Find<PackageManagerDialog>();
                 if (dialog == null) {
                     dialog = new PackageManagerDialog() { DataContext = new PackageManagerViewModel() };
                 }
@@ -809,11 +826,7 @@ namespace OpenUtau.App.Views {
         }
 
         void OnMenuDeveloperWindow(object sender, RoutedEventArgs args) {
-            var desktop = Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
-            if (desktop == null) {
-                return;
-            }
-            var window = desktop.Windows.FirstOrDefault(w => w is DeveloperWindow);
+            var window = DialogHost.Find<DeveloperWindow>();
             if (window == null) {
                 window = new DeveloperWindow();
             }
@@ -821,11 +834,7 @@ namespace OpenUtau.App.Views {
         }
 
         void OnMenuPhoneticAssistant(object sender, RoutedEventArgs args) {
-            var desktop = Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
-            if (desktop == null) {
-                return;
-            }
-            var window = desktop.Windows.FirstOrDefault(w => w is PhoneticAssistant);
+            var window = DialogHost.Find<PhoneticAssistant>();
             if (window == null) {
                 window = new PhoneticAssistant();
             }
@@ -887,7 +896,11 @@ namespace OpenUtau.App.Views {
 
 #if !ANDROID
         private void LayoutSplit(double? x, double? y) {
-            var mainScreen = Screens.Primary ?? Screens.All[0];
+            var screens = Screens;
+            if (screens == null) {
+                return;
+            }
+            var mainScreen = screens.Primary ?? screens.All[0];
             if (mainScreen == null) {
                 return;
             }
@@ -1440,9 +1453,7 @@ namespace OpenUtau.App.Views {
 
                     // Let's attach when needed to avoid startup slowdowns
                     pianoRoll = new PianoRoll(model);
-#if !ANDROID
                     pianoRoll.MainWindow = this;
-#endif
 
                     if (Preferences.Default.DetachPianoRoll) {
                         viewModel.ShowPianoRoll = false;
@@ -2175,7 +2186,7 @@ namespace OpenUtau.App.Views {
                 if (toast.windowType == "Pianoroll" && pianoRollWindow != null) {
                     if (pianoRollWindow.Toast(toast)) return;
                 }
-                notificationManager.Show(ToastControl.GetNotification(toast, this));
+                notificationManager?.Show(ToastControl.GetNotification(toast, this));
             } else if (cmd is VoiceColorRemappingNotification voicecolorNotif) {
                 if (voicecolorNotif.TrackNo < 0 || DocManager.Inst.Project.tracks.Count <= voicecolorNotif.TrackNo) {
                     // Verify whether remapping is required when the voice color lineup changes
@@ -2219,12 +2230,4 @@ namespace OpenUtau.App.Views {
         }
     }
 }
-# Fix: Ensure MainWindow.axaml root element is Window
 
-// Android fix: MainWindow is UserControl for Avalonia Android
-# Android build fix
-
-test
-commit test Sat Nov  7 20:47:58 UTC 2026
-commit attempt 1794084947
-trigger CI 1794085192

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Avalonia;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -21,7 +22,7 @@ using ReactiveUI.Primitives;
 using Serilog;
 
 namespace OpenUtau.App.Views {
-    public partial class SingersDialog : Window, ICmdSubscriber {
+    public partial class SingersDialog : AppWindowBase, ICmdSubscriber {
         private bool editingCell = false;
 
         WaveFile? wav;
@@ -206,7 +207,7 @@ namespace OpenUtau.App.Views {
             }
         }
 
-        public static void ShowSearchTermsDialog(Window owner, USinger singer, Action<string> onFinish) {
+        public static void ShowSearchTermsDialog(Visual? owner, USinger singer, Action<string> onFinish) {
             var dialog = new TypeInDialog() {
                 Title = $"{ThemeManager.GetString("tracks.searchterms")}: {singer.LocalizedName}",
             };

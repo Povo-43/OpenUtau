@@ -1,4 +1,4 @@
-﻿<Window xmlns="https://github.com/avaloniaui"
+﻿<v:AppWindowBase xmlns:v="using:OpenUtau.App.Views" xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -7,17 +7,16 @@
         x:Class="OpenUtau.App.Views.DeveloperWindow"
         x:DataType="vm:DeveloperViewModel"
         x:CompileBindings="True"
-        Icon="/Assets/open-utau.ico"
         Title="Developer" Closed="OnClosed">
-  <Window.Resources>
+  <v:AppWindowBase.Resources>
     <vm:LogEventConverter x:Key="logEventConverter"/>
-  </Window.Resources>
-  <Window.Styles>
+  </v:AppWindowBase.Resources>
+  <v:AppWindowBase.Styles>
     <!-- The app's list rows are one line tall; an event with an error spans several. -->
     <Style Selector="ListBoxItem">
       <Setter Property="Height" Value="NaN"/>
     </Style>
-  </Window.Styles>
+  </v:AppWindowBase.Styles>
   <Design.DataContext>
     <vm:DeveloperViewModel/>
   </Design.DataContext>
@@ -57,4 +56,4 @@
         <TextBox Name="CopyTextBox" IsVisible="False" IsReadOnly="True" AcceptsReturn="True" Height="0" Width="0"></TextBox>
     </Grid>
   </DockPanel>
-</Window>
+</v:AppWindowBase>

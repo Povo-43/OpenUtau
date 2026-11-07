@@ -199,7 +199,8 @@ namespace OpenUtau.App.Controls {
 
         async void TrackSettingsButtonClicked(object sender, RoutedEventArgs args) {
             if (track?.Singer != null && track.Singer.Found) {
-                if (TopLevel.GetTopLevel(this) is Window window) {
+                var window = TopLevel.GetTopLevel(this);
+                if (window != null) {
                     var dialog = new Views.TrackSettingsDialog(track);
                     await dialog.ShowDialog(window);
                 }

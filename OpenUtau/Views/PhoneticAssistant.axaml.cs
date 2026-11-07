@@ -4,7 +4,7 @@ using Avalonia.Interactivity;
 using OpenUtau.App.ViewModels;
 
 namespace OpenUtau.App.Views {
-    public partial class PhoneticAssistant : Window {
+    public partial class PhoneticAssistant : AppWindowBase {
         PhoneticAssistantViewModel viewModel;
         public PhoneticAssistant() {
             InitializeComponent();
@@ -12,7 +12,7 @@ namespace OpenUtau.App.Views {
         }
 
         public void OnCopy(object sender, RoutedEventArgs e) {
-            Clipboard?.SetTextAsync(viewModel.Phonemes);
+            TopLevel.GetTopLevel(this)?.Clipboard?.SetTextAsync(viewModel.Phonemes);
         }
     }
 }

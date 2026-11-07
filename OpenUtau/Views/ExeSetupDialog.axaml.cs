@@ -4,7 +4,7 @@ using Classic;
 using OpenUtau.App.ViewModels;
 
 namespace OpenUtau.App.Views {
-    public partial class ExeSetupDialog : Window {
+    public partial class ExeSetupDialog : AppWindowBase {
         public ExeSetupDialog() {
             InitializeComponent();
         }

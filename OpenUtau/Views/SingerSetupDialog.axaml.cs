@@ -6,7 +6,7 @@ using OpenUtau.App.ViewModels;
 using OpenUtau.Core;
 
 namespace OpenUtau.App.Views {
-    public partial class SingerSetupDialog : Window {
+    public partial class SingerSetupDialog : AppWindowBase {
         public SingerSetupDialog() {
             InitializeComponent();
         }

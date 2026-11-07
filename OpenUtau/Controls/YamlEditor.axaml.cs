@@ -1,9 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Avalonia.Input;
@@ -404,7 +405,8 @@ namespace OpenUtau.App.Controls {
                 return true;
             } catch (Exception e) {
                 Log.Error(e, $"Failed to save {filePath}");
-                if (TopLevel.GetTopLevel(this) is Window window) {
+                var window = TopLevel.GetTopLevel(this);
+                if (window != null) {
                     _ = MessageBox.ShowError(window, e);
                 }
                 return false;
@@ -433,7 +435,7 @@ namespace OpenUtau.App.Controls {
         /// Asks what to do with unsaved changes before the file is closed. Returns false if the user
         /// chose to keep editing, which is only offered when <paramref name="canStay"/>.
         /// </summary>
-        public async Task<bool> ConfirmClose(Window owner, bool canStay) {
+        public async Task<bool> ConfirmClose(Visual? owner, bool canStay) {
             if (!IsDirty) {
                 return true;
             }

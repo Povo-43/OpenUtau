@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -25,7 +25,7 @@
     </Style>
   </UserControl.Styles>
   <Button Margin="0" Padding="0" Width="24" Height="24" Background="Transparent" Focusable="False">
-    <Path Name="Path" Width="16" Height="16" Stroke="{Binding $parent[Window].Foreground}"
+    <Path Name="Path" Width="16" Height="16" Stroke="{Binding $parent[UserControl].Foreground}"
           StrokeThickness="1.75" StrokeLineCap="Flat" StrokeJoin="Miter"/>
   </Button>
 </UserControl>

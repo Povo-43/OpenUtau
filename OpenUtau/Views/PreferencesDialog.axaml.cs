@@ -11,7 +11,7 @@ using OpenUtau.Colors;
 using OpenUtau.Core;
 
 namespace OpenUtau.App.Views {
-    public partial class PreferencesDialog : Window {
+    public partial class PreferencesDialog : AppWindowBase {
         private PreferencesViewModel? viewModel => this.DataContext as PreferencesViewModel;   
 
         public PreferencesDialog() {

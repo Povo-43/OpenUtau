@@ -23,4 +23,12 @@ public class MainActivity : AvaloniaMainActivity {
         // Android オーディオ出力 (AudioTrack) を再生エンジンに差し替え
         PlaybackManager.Inst.AudioOutput = new AndroidAudioOutput();
     }
+
+    public override void OnBackPressed() {
+        // 戻るボタンは、まず最前面の擬似ウィンドウを閉じる。
+        if (OpenUtau.App.Views.DialogHost.CloseTopOverlay()) {
+            return;
+        }
+        base.OnBackPressed();
+    }
 }

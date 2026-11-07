@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
@@ -8,7 +8,7 @@ using Serilog;
 using OpenUtau.App.ViewModels;
 
 namespace OpenUtau.App.Views {
-    public partial class SingerPublishDialog : Window {
+    public partial class SingerPublishDialog : AppWindowBase {
         public SingerPublishDialog() {
             InitializeComponent();
         }
@@ -46,7 +46,8 @@ namespace OpenUtau.App.Views {
             viewModel.Publish(outputFile).ContinueWith((task) => {
                 if (task.IsFaulted) {
                     Log.Error(task.Exception, "Failed to publish singer");
-                    if (Parent is Window window) {
+                    var window = TopLevel.GetTopLevel(this);
+                    if (window != null) {
                         MessageBox.ShowError(window, task.Exception);
                     }
                 }

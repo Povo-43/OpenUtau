@@ -16,6 +16,8 @@
     <AndroidLinkMode>None</AndroidLinkMode>
     <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
     <AndroidAssetsPrefix>Assets</AndroidAssetsPrefix>
+    <AndroidSupportedAbis>arm64-v8a</AndroidSupportedAbis>
+    <AndroidExtractNativeLibs>false</AndroidExtractNativeLibs>
   </PropertyGroup>
 
   <ItemGroup>
@@ -42,5 +44,25 @@
       <AdditionalProperties>OutputType=Library;DefineConstants=ANDROID</AdditionalProperties>
     </ProjectReference>
   </ItemGroup>
+
+  <!-- Remove unwanted native library architectures from the APK after it's created -->
+  <Target Name="StripUnwantedAbisFromApk" AfterTargets="_BuildApk" Condition="'$(AndroidTargetArch)' == 'arm64' And '$(AndroidPackageFormat)' == 'apk'">
+    <PropertyGroup>
+      <_ApkPath>$(OutputPath)$(PackageId)-Signed.apk</_ApkPath>
+      <_StripCmd>zip -d "$(_ApkPath)" "lib/x86/*" "lib/x86_64/*" "lib/armeabi-v7a/*"</_StripCmd>
+    </PropertyGroup>
+    <Exec Command="$(_StripCmd)" WorkingDirectory="$(MSBuildProjectDirectory)" />
+    <Message Importance="High" Text="Stripped unwanted native library architectures from APK" />
+  </Target>
+
+  <!-- Also strip from the publish APK -->
+  <Target Name="StripUnwantedAbisFromPublishApk" AfterTargets="Publish" Condition="'$(AndroidTargetArch)' == 'arm64' And '$(AndroidPackageFormat)' == 'apk'">
+    <PropertyGroup>
+      <_PublishApkPath>$(PublishDir)$(PackageId)-Signed.apk</_PublishApkPath>
+      <_PublishStripCmd>zip -d "$(_PublishApkPath)" "lib/x86/*" "lib/x86_64/*" "lib/armeabi-v7a/*"</_PublishStripCmd>
+    </PropertyGroup>
+    <Exec Command="$(_PublishStripCmd)" WorkingDirectory="$(MSBuildProjectDirectory)" />
+    <Message Importance="High" Text="Stripped unwanted native library architectures from publish APK" />
+  </Target>
 
 </Project>

@@ -992,7 +992,7 @@ namespace OpenUtau.App.ViewModels {
             }
         }
 
-        public async void PasteSelectedParams(Window window) {
+        public async void PasteSelectedParams(Visual? window) {
             if (Part != null && DocManager.Inst.NotesClipboard != null && DocManager.Inst.NotesClipboard.Count > 0) {
                 var selectedNotes = Selection.ToList();
                 if (selectedNotes.Count == 0) {

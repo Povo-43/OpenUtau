@@ -8,7 +8,7 @@ using ReactiveUI;
 using ReactiveUI.SourceGenerators;
 
 namespace OpenUtau.App.Views {
-    public partial class TimeSignatureDialog : Window, IReactiveObject {
+    public partial class TimeSignatureDialog : AppWindowBase, IReactiveObject {
         static readonly List<int> beatPerBars = Enumerable.Range(1, 32).ToList();
         static readonly List<int> beatUnits = new List<int> { 1, 2, 4, 8, 16, 32 };
 

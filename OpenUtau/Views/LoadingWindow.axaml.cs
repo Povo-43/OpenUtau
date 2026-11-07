@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
 
 namespace OpenUtau.App.Views {
-    public partial class LoadingWindow : Window {
+    public partial class LoadingWindow : AppWindowBase {
         private static LoadingWindow? loadingDialog;
         private static bool isCurrentlyLoading = false;
         private static CancellationTokenSource? globalLoadingCancellationTokenSource;
@@ -27,7 +28,7 @@ namespace OpenUtau.App.Views {
             loadingDialog.Text.Text = "Loading...";
         }
 
-        private static void ShowLoadingWindow(Window parent) {
+        private static void ShowLoadingWindow(Visual? parent) {
             if (!isCurrentlyLoading) {
                 return;
             }
@@ -56,7 +57,7 @@ namespace OpenUtau.App.Views {
         /// <summary>
         /// Returns a task that shows a loading popup for a task after a time delay (Default 250ms)
         /// </summary>
-        public static async Task LoadForAsyncTask(Task loadingTask, Window parentWindow, int timeBeforeLoadingPopup = 250) {
+        public static async Task LoadForAsyncTask(Task loadingTask, Visual? parentWindow, int timeBeforeLoadingPopup = 250) {
             CancellationTokenSource cts = new CancellationTokenSource();
             Task loadingPopupTask = ShowLoadingAfterTime(cts.Token, parentWindow, 1);
 
@@ -72,7 +73,7 @@ namespace OpenUtau.App.Views {
         /// <summary>
         /// Returns a task that shows a loading popup for a task after a time delay (Default 250ms)
         /// </summary>
-        public static async Task<T> LoadForAsyncTask<T>(Task<T> loadingTask, Window parentWindow, int timeBeforeLoadingPopup = 250) {
+        public static async Task<T> LoadForAsyncTask<T>(Task<T> loadingTask, Visual? parentWindow, int timeBeforeLoadingPopup = 250) {
             CancellationTokenSource cts = new CancellationTokenSource();
             Task loadingPopupTask = ShowLoadingAfterTime(cts.Token, parentWindow, 1);
 
@@ -87,7 +88,7 @@ namespace OpenUtau.App.Views {
             return loadingTask.Result;
         }
 
-        private static async Task ShowLoadingAfterTime(CancellationToken ct, Window parentWindow, int milisDelay) {
+        private static async Task ShowLoadingAfterTime(CancellationToken ct, Visual? parentWindow, int milisDelay) {
             // Must have at least 1ms of delay opening loading window to avoid strange race conditions with UI thread (?)
             await Task.Delay(Math.Max(milisDelay, 1), ct);
 
@@ -102,11 +103,11 @@ namespace OpenUtau.App.Views {
             return uiTaskFactory.StartNew(func);
         }
 
-        public static void BeginLoadingImmediate(Window parentWindow) {
+        public static void BeginLoadingImmediate(Visual? parentWindow) {
             BeginLoading(parentWindow, 0);
         }
 
-        public static void BeginLoading(Window parentWindow, int milisDelay = 250) {
+        public static void BeginLoading(Visual? parentWindow, int milisDelay = 250) {
             if (isCurrentlyLoading) {
                 return;
             }

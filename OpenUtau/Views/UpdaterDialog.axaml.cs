@@ -8,7 +8,7 @@ using OpenUtau.Core.Util;
 using Serilog;
 
 namespace OpenUtau.App.Views {
-    public partial class UpdaterDialog : Window {
+    public partial class UpdaterDialog : AppWindowBase {
         public readonly UpdaterViewModel ViewModel;
         public UpdaterDialog() {
             InitializeComponent();
@@ -22,7 +22,7 @@ namespace OpenUtau.App.Views {
         /// <summary>Whether CheckForUpdate runs. UI tests turn it off to stay offline.</summary>
         public static bool CheckForUpdateEnabled { get; set; } = true;
 
-        public static void CheckForUpdate(Action<Window> showDialog, Action closeApplication, TaskScheduler scheduler) {
+        public static void CheckForUpdate(Action<AppWindowBase> showDialog, Action closeApplication, TaskScheduler scheduler) {
             if (!CheckForUpdateEnabled) {
                 return;
             }

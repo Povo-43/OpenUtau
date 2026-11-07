@@ -36,9 +36,37 @@ namespace OpenUtau.App {
                 desktop.MainWindow = new SplashWindow();
             }
 #else
-            // Android: single-window app. Set MainView to MainWindow (UserControl).
+            // Android: single-view app. The real MainWindow view is used as the
+            // root; dialogs are shown as in-app overlays (see DialogHost).
             if (ApplicationLifetime is ISingleViewApplicationLifetime singleView) {
-                singleView.MainView = new Views.AndroidMainView();
+                var loadingView = new TextBlock {
+                    Text = "Loading OpenUtau…",
+                    FontSize = 18,
+                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                };
+                singleView.MainView = loadingView;
+
+                var mainThread = Thread.CurrentThread;
+                var mainScheduler = TaskScheduler.FromCurrentSynchronizationContext();
+                Task.Run(() => AppStartup.InitializeCore(mainThread, mainScheduler))
+                    .ContinueWith(t => {
+                        if (t.IsFaulted) {
+                            Log.Error(t.Exception, "Failed to start OpenUtau.");
+                            loadingView.Text = "Failed to start OpenUtau:\n" + t.Exception?.GetBaseException().Message;
+                            return;
+                        }
+                        try {
+                            var mainWindow = new Views.MainWindow();
+                            singleView.MainView = mainWindow;
+                            mainWindow.InitProject();
+                            LoadingWindow.InitializeLoadingWindow();
+                        } catch (Exception e) {
+                            Log.Error(e, "Failed to create main window.");
+                            loadingView.Text = "Failed to start OpenUtau:\n" + e.Message;
+                            singleView.MainView = loadingView;
+                        }
+                    }, mainScheduler);
             }
 #endif
 

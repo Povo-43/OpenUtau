@@ -55,59 +55,26 @@ namespace OpenUtau.App.Views {
             var mainThread = Thread.CurrentThread;
             var mainScheduler = TaskScheduler.FromCurrentSynchronizationContext();
             Task.Run(() => {
-                Log.Information("Initializing OpenUtau.");
-                ToolsManager.Inst.Initialize();
-                // Before the singer search, so the warnings it raises can be published.
-                DocManager.Inst.Initialize(mainThread, mainScheduler);
-                DocManager.Inst.PostOnUIThread = action => Avalonia.Threading.Dispatcher.UIThread.Post(action);
-                SingerManager.Inst.Initialize();
-                Log.Information("Initialized OpenUtau.");
-                InitAudio();
+                AppStartup.InitializeCore(mainThread, mainScheduler);
             }).ContinueWith(t => {
                 if (t.IsFaulted) {
                     Log.Error(t.Exception?.Flatten(), "Failed to Start.");
                     MessageBox.ShowError(this, t.Exception, "Failed to Start OpenUtau").ContinueWith(t1 => { Close(); });
                     return;
                 }
+#if !ANDROID
                 if (App.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop) {
                     var mainWindow = new MainWindow();
-                    mainWindow.Show();
-                    desktop.MainWindow = mainWindow;
+                    var host = new MainWindowHost(mainWindow);
+                    desktop.MainWindow = host;
+                    host.Show();
                     mainWindow.InitProject();
                     LoadingWindow.InitializeLoadingWindow();
                     Close();
                 }
+#endif
             }, CancellationToken.None, TaskContinuationOptions.None, mainScheduler);
         }
 
-        private static void InitAudio() {
-            Log.Information("Initializing audio.");
-            if (OS.IsWindows() && Core.Util.Preferences.Default.AudioBackEnd == 0) {
-                try {
-                    PlaybackManager.Inst.AudioOutput = new NAudioOutput();
-                } catch (Exception e0) {
-                    Log.Error(e0, "Failed to init NAudio");
-                }
-            } else {
-                switch (Core.Util.Preferences.Default.AudioBackEnd) {
-                    case 0:
-                    case 1:
-                        try {
-                            PlaybackManager.Inst.AudioOutput = new Audio.MiniAudioOutput();
-                        } catch (Exception e1) {
-                            Log.Error(e1, "Failed to init MiniAudio");
-                        }
-                        break;
-                    case 2:
-                        try {
-                            PlaybackManager.Inst.AudioOutput = new Audio.SDL3AudioOutput();
-                        } catch (Exception e2) {
-                            Log.Error(e2, "Failed to init SDL3 Audio");
-                        }
-                        break;
-                }
-            }
-            Log.Information("Initialized audio.");
-        }
     }
 }

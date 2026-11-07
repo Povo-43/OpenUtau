@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<v:AppWindowBase xmlns:v="using:OpenUtau.App.Views" xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -7,7 +7,6 @@
         mc:Ignorable="d"
         x:Class="OpenUtau.App.Views.MixFxDialog"
         x:DataType="vm:MixFxViewModel"
-        Icon="/Assets/open-utau.ico"
         Title="{DynamicResource mixfx.caption}"
         Width="840" SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
@@ -17,7 +16,7 @@
        bars, standard controls) follows the app theme; each faceplate keeps
        its own palette, set through the Plate* / Knob* / Screen* resources on
        the faceplate Border and picked up by the styles below. -->
-  <Window.Resources>
+  <v:AppWindowBase.Resources>
     <ResourceDictionary>
       <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Dark">
@@ -40,9 +39,9 @@
         </ResourceDictionary>
       </ResourceDictionary.ThemeDictionaries>
     </ResourceDictionary>
-  </Window.Resources>
+  </v:AppWindowBase.Resources>
 
-  <Window.Styles>
+  <v:AppWindowBase.Styles>
     <Style Selector="Border.bar">
       <Setter Property="Background" Value="{DynamicResource RackBar}"/>
       <Setter Property="CornerRadius" Value="6"/>
@@ -253,9 +252,9 @@
       <Setter Property="HorizontalAlignment" Value="Right"/>
       <Setter Property="Fill" Value="#EDEDED"/>
     </Style>
-  </Window.Styles>
+  </v:AppWindowBase.Styles>
 
-  <Border Margin="{Binding $parent[Window].WindowDecorationMargin}">
+  <Border>
     <DockPanel Margin="10">
 
       <!-- TOP: track + default settings + master power -->
@@ -503,4 +502,4 @@
       </Grid>
     </DockPanel>
   </Border>
-</Window>
+</v:AppWindowBase>

@@ -4,7 +4,7 @@ using Avalonia.Interactivity;
 using OpenUtau.App.ViewModels;
 
 namespace OpenUtau.App.Views {
-    public partial class LyricsReplaceDialog : Window {
+    public partial class LyricsReplaceDialog : AppWindowBase {
         public LyricsReplaceDialog() {
             InitializeComponent();
         }

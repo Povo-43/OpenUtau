@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Avalonia;
@@ -19,7 +19,7 @@ namespace OpenUtau.App.Views {
     /// song can be played and edited while the knobs are turned; every edit is
     /// heard live.  One window per track.
     /// </summary>
-    public partial class MixFxDialog : Window, ICmdSubscriber {
+    public partial class MixFxDialog : AppWindowBase, ICmdSubscriber {
         static readonly Dictionary<UTrack, MixFxDialog> open = new Dictionary<UTrack, MixFxDialog>();
 
         readonly MixFxViewModel viewModel;
@@ -42,7 +42,7 @@ namespace OpenUtau.App.Views {
         }
 
         /// <summary>Opens the rack for <paramref name="track"/>, or brings its open one to the front.</summary>
-        public static void Open(Window owner, UTrack track) {
+        public static void Open(Visual? owner, UTrack track) {
             if (open.TryGetValue(track, out var existing)) {
                 existing.Activate();
                 return;

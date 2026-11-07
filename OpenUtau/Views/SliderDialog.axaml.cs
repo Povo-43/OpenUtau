@@ -6,7 +6,7 @@ using ReactiveUI;
 using ReactiveUI.Primitives;
 
 namespace OpenUtau.App.Views {
-    public partial class SliderDialog : Window {
+    public partial class SliderDialog : AppWindowBase {
         public Action<double>? onFinish;
 
         public SliderDialog() {

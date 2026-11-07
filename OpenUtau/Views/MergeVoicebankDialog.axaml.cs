@@ -1,4 +1,4 @@
-using Serilog;
+﻿using Serilog;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
@@ -6,7 +6,7 @@ using Avalonia.Interactivity;
 using OpenUtau.App.ViewModels;
 
 namespace OpenUtau.App.Views {
-    public partial class MergeVoicebankDialog : Window {
+    public partial class MergeVoicebankDialog : AppWindowBase {
         public MergeVoicebankDialog() {
             InitializeComponent();
         }
@@ -51,7 +51,8 @@ namespace OpenUtau.App.Views {
             task.ContinueWith((task) => {
                 if (task.IsFaulted) {
                     Log.Error(task.Exception, "Failed to merge singer");
-                    if (Parent is Window window) {
+                    var window = TopLevel.GetTopLevel(this);
+                    if (window != null) {
                         MessageBox.ShowError(window, task.Exception);
                     }
                 }

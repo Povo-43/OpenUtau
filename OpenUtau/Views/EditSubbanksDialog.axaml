@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<v:AppWindowBase xmlns:v="using:OpenUtau.App.Views" xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -6,7 +6,6 @@
         mc:Ignorable="d"
         x:Class="OpenUtau.App.Views.EditSubbanksDialog"
         x:DataType="vm:EditSubbanksViewModel"
-        Icon="/Assets/open-utau.ico"
         Title="{DynamicResource singers.subbanks.edit}"
         WindowStartupLocation="CenterScreen"
         MinWidth="500" MinHeight="600" Width="500" Height="600">
@@ -50,4 +49,4 @@
       </Grid>
     </Grid>
   </Grid>
-</Window>
+</v:AppWindowBase>

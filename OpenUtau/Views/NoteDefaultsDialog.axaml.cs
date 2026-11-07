@@ -4,7 +4,7 @@ using OpenUtau.App.ViewModels;
 using OpenUtau.Core.Util;
 
 namespace OpenUtau.App.Views {
-    public partial class NoteDefaultsDialog : Window {
+    public partial class NoteDefaultsDialog : AppWindowBase {
         internal readonly NoteDefaultsViewModel ViewModel;
         public NoteDefaultsDialog() {
             InitializeComponent();
