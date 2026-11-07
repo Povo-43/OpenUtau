@@ -5,6 +5,7 @@ using Android.OS;
 using Android.Runtime;
 using Avalonia;
 using Avalonia.Android;
+using OpenUtau.App.Views;
 using OpenUtau.Core;
 
 namespace OpenUtau.Android;
@@ -17,19 +18,38 @@ namespace OpenUtau.Android;
     Exported = true,
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode | ConfigChanges.FontScale)]
 [IntentFilter(new[] { Intent.ActionMain }, Categories = new[] { Intent.CategoryLauncher })]
-public class MainActivity : AvaloniaMainActivity {
-    protected override void OnCreate(Bundle? savedInstanceState) {
-        base.OnCreate(savedInstanceState);
-        // Android オーディオ出力 (AudioTrack) を再生エンジンに差し替え
-        PlaybackManager.Inst.AudioOutput = new AndroidAudioOutput();
-    }
+public class MainActivity : AppCompatActivity
+{
+    private AvaloniaView? _avaloniaView;
 
-    protected override AppBuilder CustomizeAppBuilder(AppBuilder builder) {
-        return base.CustomizeAppBuilder(builder)
+    protected override void OnCreate(Bundle? savedInstanceState)
+    {
+        base.OnCreate(savedInstanceState);
+
+        // Avalonia アプリを構築
+        var builder = AppBuilder.Configure<App>()
+            .UseAndroid()
             .LogToTrace()
             .With(new SkiaOptions
             {
                 MaxGpuResourceSizeBytes = 256 * 1024 * 1024 // 256 MB
             });
+
+        var _ = builder.Build();
+
+        // メインウィンドウを AvaloniaView に設定
+        var mainWindow = new MainWindow();
+        _avaloniaView = new AvaloniaView(this);
+        _avaloniaView.Content = mainWindow;
+        SetContentView(_avaloniaView);
+
+        // Android オーディオ出力 (AudioTrack) を再生エンジンに差し替え
+        PlaybackManager.Inst.AudioOutput = new AndroidAudioOutput();
+    }
+
+    protected override void OnDestroy()
+    {
+        _avaloniaView?.Dispose();
+        base.OnDestroy();
     }
 }
