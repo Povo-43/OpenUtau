@@ -37,7 +37,7 @@ public class MainActivity : AppCompatActivity
                 MaxGpuResourceSizeBytes = 256 * 1024 * 1024 // 256 MB
             });
 
-        var _ = builder.Build();
+        builder.SetupWithoutStarting();
 
         // メインウィンドウを AvaloniaView に設定
         var mainWindow = new MainWindow();
