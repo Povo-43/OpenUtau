@@ -20,6 +20,10 @@ namespace OpenUtau.Core.Util {
 
         public static void Save() {
             try {
+                var dir = Path.GetDirectoryName(PathManager.Inst.PrefsFilePath);
+                if (!string.IsNullOrEmpty(dir)) {
+                    Directory.CreateDirectory(dir);
+                }
                 File.WriteAllText(PathManager.Inst.PrefsFilePath,
                     Json.Serialize(Default, Json.WriteIndentedOptions),
                     Encoding.UTF8);

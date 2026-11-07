@@ -349,9 +349,14 @@ namespace OpenUtau.App {
             if (file == null) return null;
             var localPath = file.TryGetLocalPath();
             if (!string.IsNullOrEmpty(localPath)) return localPath;
-            // Android SAF: no local path; caller will need to stream-write via OpenWriteAsync.
-            // For now return null and let callers handle stream-based save.
-            return null;
+            // Android SAF: TryGetLocalPath() returns null for content:// URIs.
+            // Save to a temp file first, then copy to the SAF stream so callers
+            // that expect a path string still work.
+            var tempPath = Path.Combine(Path.GetTempPath(), filename ?? "openutau-temp");
+            await using var tempStream = File.Create(tempPath);
+            await using var outStream = await file.OpenWriteAsync(FileAccess.ReadWrite);
+            await tempStream.CopyToAsync(outStream);
+            return tempPath;
         }
 #endif
     }

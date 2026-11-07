@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using Serilog;
 
 namespace OpenUtau {
     public static class OS {
@@ -13,6 +14,10 @@ namespace OpenUtau {
 
 
         public static void OpenFolder(string path) {
+            if (IsAndroid()) {
+                Log.Warning("OpenFolder is not supported on Android.");
+                return;
+            }
             if (Directory.Exists(path)) {
                 Process.Start(new ProcessStartInfo {
                     FileName = GetOpener(),
@@ -22,6 +27,10 @@ namespace OpenUtau {
         }
 
         public static void GotoFile(string path) {
+            if (IsAndroid()) {
+                Log.Warning("GotoFile is not supported on Android.");
+                return;
+            }
             if (File.Exists(path)) {
                 var wrappedPath = GetWrappedPath(path);
                 if (IsWindows()) {
@@ -41,6 +50,10 @@ namespace OpenUtau {
         }
 
         public static void OpenWeb(string url) {
+            if (IsAndroid()) {
+                Log.Warning("OpenWeb is not supported on Android.");
+                return;
+            }
             Process.Start(new ProcessStartInfo {
                 FileName = GetOpener(),
                 Arguments = url,
