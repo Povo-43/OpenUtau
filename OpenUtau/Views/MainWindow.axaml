@@ -9,6 +9,8 @@
         x:Class="OpenUtau.App.Views.MainWindow"
         x:CompileBindings="True">
     <UserControl.Styles>
+    <Style Selector="Button,ToggleButton">
+      <Setter Property="Focusable" Value="False"/>
     </Style>
     <Style Selector="FlyoutPresenter.warnings">
       <Setter Property="Padding" Value="0"/>
