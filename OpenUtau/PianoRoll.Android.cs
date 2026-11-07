@@ -7,6 +7,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using OpenUtau.App.Controls;
+using OpenUtau.App.Views;
 
 namespace OpenUtau.App.Controls;
 
