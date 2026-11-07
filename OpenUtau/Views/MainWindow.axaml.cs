@@ -2222,3 +2222,4 @@ namespace OpenUtau.App.Views {
 # Fix: Ensure MainWindow.axaml root element is Window
 
 // Android fix: MainWindow is UserControl for Avalonia Android
+# Android build fix
