@@ -2141,11 +2141,10 @@ namespace OpenUtau.App.Views {
             switch (result) {
                 case MessageBox.MessageBoxResult.Yes:
                     await Save();
-                    goto case MessageBox.MessageBoxResult.No;
                     return true; // Continue.
+                case MessageBox.MessageBoxResult.No:
                     return false; // Cancel.
-
-                }
+            }
         public void OnNext(UCommand cmd, bool isUndo) {
             // Errors from missing packages become an offer to install them.
             var missingPackages = MissingPackageException.Collect((cmd as ErrorMessageNotification)?.e ?? (cmd as ToastNotification)?.e);
