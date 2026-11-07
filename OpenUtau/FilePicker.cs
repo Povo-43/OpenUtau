@@ -354,7 +354,7 @@ namespace OpenUtau.App {
             // that expect a path string still work.
             var tempPath = Path.Combine(Path.GetTempPath(), filename ?? "openutau-temp");
             await using var tempStream = File.Create(tempPath);
-            await using var outStream = await file.OpenWriteAsync(FileAccess.ReadWrite);
+            await using var outStream = await file.OpenWriteAsync();
             await tempStream.CopyToAsync(outStream);
             return tempPath;
         }
