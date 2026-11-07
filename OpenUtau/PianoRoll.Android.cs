@@ -39,7 +39,7 @@ public partial class PianoRoll {
         this.AddHandler(PointerWheelChangedEvent, OnTouchPointerWheelChanged, RoutingStrategies.Tunnel);
     }
 
-    private void OnTouchPointerPressed(object sender, PointerPressedEventArgs args) {
+    private void OnTouchPointerPressed(object? sender, PointerPressedEventArgs args) {
         if (args.Pointer.Type != PointerType.Touch) return;
 
         var pointer = args.Pointer as Pointer;
@@ -66,7 +66,7 @@ public partial class PianoRoll {
         }
     }
 
-    private void OnTouchPointerMoved(object sender, PointerEventArgs args) {
+    private void OnTouchPointerMoved(object? sender, PointerEventArgs args) {
         if (args.Pointer.Type != PointerType.Touch) return;
 
         var pointer = args.Pointer as Pointer;
@@ -103,7 +103,7 @@ public partial class PianoRoll {
         }
     }
 
-    private void OnTouchPointerReleased(object sender, PointerReleasedEventArgs args) {
+    private void OnTouchPointerReleased(object? sender, PointerReleasedEventArgs args) {
         if (args.Pointer.Type != PointerType.Touch) return;
 
         var pointer = args.Pointer as Pointer;
@@ -122,7 +122,7 @@ public partial class PianoRoll {
         _longPressPointer = null;
     }
 
-    private void OnTouchPointerWheelChanged(object sender, PointerWheelEventArgs args) {
+    private void OnTouchPointerWheelChanged(object? sender, PointerWheelEventArgs args) {
         // On Android, wheel events from stylus buttons or scroll may arrive here.
         // Map to existing scroll/zoom behavior is handled by the base handlers.
     }
