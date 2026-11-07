@@ -36,8 +36,8 @@ namespace OpenUtau.App {
                 desktop.MainWindow = new SplashWindow();
             }
 #else
-            // Android: single-window app, show MainWindow directly
-            Application.Current!.MainWindow = new Views.MainWindow();
+            // Android: single-window app. MainWindow is created by Avalonia.Android
+            // in MainActivity; nothing to set here.
 #endif
 
             base.OnFrameworkInitializationCompleted();

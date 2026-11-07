@@ -335,6 +335,9 @@ namespace OpenUtau.App.ViewModels {
                 return;
             }
 #endif
+            if (mainWindow == null) {
+                return;
+            }
             var file = await FilePicker.OpenFileAboutSinger(
                 mainWindow, "menu.tools.singer.install", FilePicker.ArchiveFiles);
             if (file == null) {
