@@ -8,6 +8,7 @@
         x:DataType="vm:MainWindowViewModel"
         x:Class="OpenUtau.App.Views.MainWindow"
         x:CompileBindings="True">
+    <UserControl.Styles>
     </Style>
     <Style Selector="FlyoutPresenter.warnings">
       <Setter Property="Padding" Value="0"/>
@@ -16,6 +17,7 @@
       <Setter Property="BorderBrush" Value="{DynamicResource MenuFlyoutPresenterBorderBrush}"/>
       <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
       <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled"/>
+    <UserControl.Styles>
     </Style>
   </UserControl.Styles>
   <Grid>
@@ -220,7 +222,8 @@
                 <Setter Property="MinHeight" Value="48" />
                 <Setter Property="Padding" Value="16,0" />
                 <Setter Property="VerticalContentAlignment" Value="Center" />
-              </Style>
+              <UserControl.Styles>
+    </Style>
             </ListBox.Styles>
             <ListBox.ItemTemplate>
               <DataTemplate x:DataType="vm:RecentFileInfo">
@@ -241,7 +244,8 @@
                 <Setter Property="MinHeight" Value="48" />
                 <Setter Property="Padding" Value="16,0" />
                 <Setter Property="VerticalContentAlignment" Value="Center" />
-              </Style>
+              <UserControl.Styles>
+    </Style>
             </ListBox.Styles>
             <ListBox.ItemTemplate>
               <DataTemplate x:DataType="vm:RecentFileInfo">
@@ -360,7 +364,8 @@
                     <Setter Property="Command" Value="{Binding Command}"/>
                     <Setter Property="CommandParameter" Value="{Binding CommandParameter}"/>
                     <Setter Property="ItemsSource" Value="{Binding Items}"/>
-                  </Style>
+                  <UserControl.Styles>
+    </Style>
                 </ContextMenu.Styles>
               </ContextMenu>
             </Canvas.ContextMenu>
