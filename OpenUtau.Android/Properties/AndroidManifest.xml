@@ -5,7 +5,6 @@
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
   <uses-permission android:name="android.permission.RECORD_AUDIO" />
   <application
-      android:name=".OpenUtauApplication"
       android:allowBackup="true"
       android:icon="@drawable/icon"
       android:label="OpenUtau"

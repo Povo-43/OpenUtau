@@ -7,29 +7,10 @@ using OpenUtau.Core;
 
 namespace OpenUtau.Android;
 
-[Register("com.stakira.openutau.OpenUtauApplication")]
-[Application]
-public class OpenUtauApplication : AvaloniaAndroidApplication<global::OpenUtau.App.App> {
-    protected OpenUtauApplication(nint javaReference, JniHandleOwnership transfer)
-        : base(javaReference, transfer) {
-    }
-
-    public override void OnCreate() {
-        base.OnCreate();
-        // Android: メインウィンドウのビューファクトリを設定
-        if (((IAndroidApplication)this).Lifetime is { } lifetime) {
-            lifetime.MainViewFactory = () => new Views.MainWindow();
-        }
-        // Android オーディオ出力 (AudioTrack) を再生エンジンに差し替え
-        PlaybackManager.Inst.AudioOutput = new AndroidAudioOutput();
-    }
-
-    protected override AppBuilder CustomizeAppBuilder(AppBuilder builder) {
-        return base.CustomizeAppBuilder(builder)
-            .LogToTrace()
-            .With(new SkiaOptions
-            {
-                MaxGpuResourceSizeBytes = 256 * 1024 * 1024 // 256 MB
-            });
+// OpenUtauApplication は Android の Application クラスとしては使用しません。
+// 初期化は MainActivity.OnCreate で行います。
+// 将来の Android 固有初期化コードのためにクラスは残しておきます。
+namespace OpenUtau.Android {
+    public class OpenUtauApplication {
     }
 }
