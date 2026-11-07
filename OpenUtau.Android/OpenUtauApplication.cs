@@ -16,6 +16,10 @@ public class OpenUtauApplication : AvaloniaAndroidApplication<global::OpenUtau.A
 
     public override void OnCreate() {
         base.OnCreate();
+        // Android: メインウィンドウのビューファクトリを設定
+        if (((IAndroidApplication)this).Lifetime is { } lifetime) {
+            lifetime.MainViewFactory = () => new Views.MainWindow();
+        }
         // Android オーディオ出力 (AudioTrack) を再生エンジンに差し替え
         PlaybackManager.Inst.AudioOutput = new AndroidAudioOutput();
     }

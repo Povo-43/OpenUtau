@@ -36,8 +36,7 @@ namespace OpenUtau.App {
                 desktop.MainWindow = new SplashWindow();
             }
 #else
-            // Android: single-window app
-            MainWindow = new Views.MainWindow();
+            // Android: single-window app. MainWindow view factory is set in OpenUtauApplication.
 #endif
 
             base.OnFrameworkInitializationCompleted();
