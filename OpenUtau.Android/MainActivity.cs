@@ -1,3 +1,4 @@
+using System;
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
@@ -39,10 +40,11 @@ public class MainActivity : AppCompatActivity
 
         builder.SetupWithoutStarting();
 
-        // メインウィンドウを AvaloniaView に設定
+        // メインウィンドウのコンテンツを AvaloniaView に設定
+        // Android では Window を直接表示できないため、Content プロパティ（Grid などのコントロール）を設定する
         var mainWindow = new MainWindow();
         _avaloniaView = new AvaloniaView(this);
-        _avaloniaView.Content = mainWindow;
+        _avaloniaView.Content = mainWindow.Content ?? throw new InvalidOperationException("MainWindow.Content is null");
         SetContentView(_avaloniaView);
 
         // Android オーディオ出力 (AudioTrack) を再生エンジンに差し替え
