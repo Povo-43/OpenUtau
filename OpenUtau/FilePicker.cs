@@ -214,7 +214,8 @@ namespace OpenUtau.App {
             return result;
         }
 
-        {
+        public async static Task<string[]?> OpenFiles(
+            Window window, string titleKey, string? startLocation, params FilePickerFileType[] types) {
 #if ANDROID
             return await OpenFilesAndroid(window, titleKey, startLocation, types);
 #else
