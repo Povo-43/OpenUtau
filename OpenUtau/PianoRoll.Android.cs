@@ -45,7 +45,7 @@ public partial class PianoRoll {
         var pointer = args.Pointer as Pointer;
         if (pointer == null) return;
 
-        var control = (Control)sender;
+        var control = (Control)sender!;
         var point = args.GetCurrentPoint(control);
 
         // Start long-press timer
@@ -72,7 +72,7 @@ public partial class PianoRoll {
         var pointer = args.Pointer as Pointer;
         if (pointer == null) return;
 
-        var control = (Control)sender;
+        var control = (Control)sender!;
         var point = args.GetCurrentPoint(control);
         _touchPoints[pointer.Id] = point.Position;
 
