@@ -33,11 +33,6 @@ using Point = Avalonia.Point;
 
 namespace OpenUtau.App.Views {
     public partial class MainWindow : Window, ICmdSubscriber {
-#if ANDROID
-    public WindowState WindowState { get => WindowState.Normal; set { } }
-    public PixelPoint Position { get => new PixelPoint(0, 0); set { } }
-    public void Close() { }
-#endif
         private readonly KeyModifiers cmdKey =
             OS.IsMacOS() ? KeyModifiers.Meta : KeyModifiers.Control;
         private readonly MainWindowViewModel viewModel;
@@ -879,12 +874,14 @@ namespace OpenUtau.App.Views {
             }
         }
 
+#if !ANDROID
         void OnMenuLayoutVSplit11(object sender, RoutedEventArgs args) => LayoutSplit(null, 1.0 / 2);
         void OnMenuLayoutVSplit12(object sender, RoutedEventArgs args) => LayoutSplit(null, 1.0 / 3);
         void OnMenuLayoutVSplit13(object sender, RoutedEventArgs args) => LayoutSplit(null, 1.0 / 4);
         void OnMenuLayoutHSplit11(object sender, RoutedEventArgs args) => LayoutSplit(1.0 / 2, null);
         void OnMenuLayoutHSplit12(object sender, RoutedEventArgs args) => LayoutSplit(1.0 / 3, null);
         void OnMenuLayoutHSplit13(object sender, RoutedEventArgs args) => LayoutSplit(1.0 / 4, null);
+#endif
 
 #if !ANDROID
         private void LayoutSplit(double? x, double? y) {
@@ -2144,6 +2141,8 @@ namespace OpenUtau.App.Views {
                     return true; // Continue.
                 case MessageBox.MessageBoxResult.No:
                     return false; // Cancel.
+                default:
+                    return false;
             }
         }
 
