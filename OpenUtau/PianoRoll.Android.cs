@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Threading;
 using OpenUtau.App.Controls;
 
@@ -41,17 +42,20 @@ public partial class PianoRoll {
     private void OnTouchPointerPressed(object sender, PointerPressedEventArgs args) {
         if (args.Pointer.Type != PointerType.Touch) return;
 
+        var pointer = args.Pointer as Pointer;
+        if (pointer == null) return;
+
         var control = (Control)sender;
         var point = args.GetCurrentPoint(control);
 
         // Start long-press timer
-        _longPressPointer = args.Pointer;
+        _longPressPointer = pointer;
         _longPressStartPosition = point.Position;
         _longPressStartTime = DateTime.Now;
         _longPressTimer?.Start();
 
         // Track touch point for pinch detection
-        _touchPoints[args.Pointer.Id] = point.Position;
+        _touchPoints[pointer.Id] = point.Position;
 
         // Pinch start: 2 fingers down
         if (_touchPoints.Count == 2) {
@@ -65,9 +69,12 @@ public partial class PianoRoll {
     private void OnTouchPointerMoved(object sender, PointerEventArgs args) {
         if (args.Pointer.Type != PointerType.Touch) return;
 
+        var pointer = args.Pointer as Pointer;
+        if (pointer == null) return;
+
         var control = (Control)sender;
         var point = args.GetCurrentPoint(control);
-        _touchPoints[args.Pointer.Id] = point.Position;
+        _touchPoints[pointer.Id] = point.Position;
 
         if (_pinching && _touchPoints.Count == 2) {
             var newDistance = PinchDistance();
@@ -87,8 +94,9 @@ public partial class PianoRoll {
         }
 
         // Long-press move threshold: cancel if finger moves too much
-        if (_longPressTimer?.IsEnabled == true && _longPressPointer == args.Pointer) {
-            if ((point.Position - _longPressStartPosition).Length > LongPressMoveThreshold) {
+        if (_longPressTimer?.IsEnabled == true && _longPressPointer == pointer) {
+            var delta = point.Position - _longPressStartPosition;
+            if (Math.Sqrt(delta.X * delta.X + delta.Y * delta.Y) > LongPressMoveThreshold) {
                 _longPressTimer.Stop();
                 _longPressPointer = null;
             }
@@ -98,7 +106,10 @@ public partial class PianoRoll {
     private void OnTouchPointerReleased(object sender, PointerReleasedEventArgs args) {
         if (args.Pointer.Type != PointerType.Touch) return;
 
-        _touchPoints.Remove(args.Pointer.Id);
+        var pointer = args.Pointer as Pointer;
+        if (pointer == null) return;
+
+        _touchPoints.Remove(pointer.Id);
 
         if (_pinching) {
             _pinching = false;

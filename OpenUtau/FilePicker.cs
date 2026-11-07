@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -192,7 +193,7 @@ namespace OpenUtau.App {
             if (!string.IsNullOrEmpty(localPath)) return localPath;
             // Android SAF: TryGetLocalPath() returns null for content:// URIs,
             // so read the stream and copy to a temp file.
-            using var stream = await f.OpenReadAsync(FileAccess.Read);
+            using var stream = await f.OpenReadAsync();
             var tempName = f.Name ?? "file";
             var tempPath = Path.Combine(Path.GetTempPath(), tempName);
             using var fileStream = File.Create(tempPath);
@@ -257,7 +258,7 @@ namespace OpenUtau.App {
                     paths.Add(localPath);
                     continue;
                 }
-                using var stream = await f.OpenReadAsync(FileAccess.Read);
+                using var stream = await f.OpenReadAsync();
                 var tempName = f.Name ?? "file";
                 var tempPath = Path.Combine(Path.GetTempPath(), tempName);
                 using var fileStream = File.Create(tempPath);
