@@ -67,27 +67,11 @@ jobs:
           mkdir -p release
           cp OpenUtau.Android/bin/Release/net10.0-android36.0/publish/com.stakira.openutau-Signed.apk release/OpenUtau-Android-${{ steps.version.outputs.version }}.apk
 
-      # 7z 圧縮ツールをインストール (帯域が細い環境向け)
-      - name: Install 7z
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq p7zip-full
-
-      # APK を 7z で圧縮 (帯域が細い環境向け)
-      - name: Compress APK to 7z
-        run: |
-          cd release
-          7z a -t7z -m0=lzma2 -mx=9 OpenUtau-Android-${{ steps.version.outputs.version }}.7z OpenUtau-Android-${{ steps.version.outputs.version }}.apk
-
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: OpenUtau-Android-release.apk
           path: release/*.apk
-
-      - name: Upload APK 7z artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: OpenUtau-Android-release.7z
-          path: release/*.7z
 
   release:
     needs: build
@@ -103,19 +87,13 @@ jobs:
           name: OpenUtau-Android-release.apk
           path: release
 
-      - name: Download APK 7z artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: OpenUtau-Android-release.7z
-          path: release
-
-      - name: Create Release and upload APK + zip
+      - name: Create Release and upload APK
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref }}
           name: OpenUtau Android ${{ needs.build.outputs.version }}
           draft: false
           prerelease: false
-          files: release/*
+          files: release/*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
