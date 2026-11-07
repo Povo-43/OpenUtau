@@ -55,7 +55,9 @@ namespace OpenUtau.App.Views {
 
         private readonly DispatcherTimer timer;
         private readonly DispatcherTimer autosaveTimer;
+#if !ANDROID
         private bool forceClose;
+#endif
 
         private bool shouldOpenPartsContextMenu;
 
