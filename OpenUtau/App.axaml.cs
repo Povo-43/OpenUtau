@@ -35,6 +35,9 @@ namespace OpenUtau.App {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop) {
                 desktop.MainWindow = new SplashWindow();
             }
+#else
+            // Android: single-window app, show MainWindow directly
+            MainWindow = new MainWindow();
 #endif
 
             base.OnFrameworkInitializationCompleted();

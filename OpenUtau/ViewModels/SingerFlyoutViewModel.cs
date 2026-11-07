@@ -315,21 +315,25 @@ namespace OpenUtau.App.ViewModels {
 
         public void EditSearchTerms(SingerTileViewModel tile) {
             CloseRequested?.Invoke();
+#if !ANDROID
             var mainWindow = (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
             if (mainWindow == null) {
                 return;
             }
             SingersDialog.ShowSearchTermsDialog(mainWindow, tile.Singer,
                 text => SingersViewModel.SetSearchTerms(tile.Singer, text));
+#endif
         }
 
         public async void InstallSinger() {
             CloseRequested?.Invoke();
+#if !ANDROID
             var mainWindow = (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)
                 ?.MainWindow as MainWindow;
             if (mainWindow == null) {
                 return;
             }
+#endif
             var file = await FilePicker.OpenFileAboutSinger(
                 mainWindow, "menu.tools.singer.install", FilePicker.ArchiveFiles);
             if (file == null) {

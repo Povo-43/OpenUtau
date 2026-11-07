@@ -30,7 +30,9 @@ namespace OpenUtau.App.Controls {
     }
 
     public partial class PianoRoll : UserControl, IValueTip, ICmdSubscriber {
+#if !ANDROID
         public MainWindow? MainWindow { get; set; }
+#endif
         public PianoRollViewModel ViewModel;
 #if ANDROID
         partial void InitializeTouchSupport();
@@ -104,9 +106,13 @@ namespace OpenUtau.App.Controls {
                 }
                 try {
                     if (edit.IsAsync) {
+#if !ANDROID
                         var mainWindow =
                             (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)
                             ?.MainWindow! as MainWindow;
+#else
+                        MainWindow? mainWindow = null;
+#endif
                         var name = ThemeManager.GetString(edit.Name);
                         await MessageBox.ShowProcessing(RootWindow, $"{name} - ? / ?",
                             ThemeManager.GetString("pianoroll.menu.batch.running"),

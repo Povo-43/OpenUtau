@@ -423,15 +423,18 @@ namespace OpenUtau.App.ViewModels {
                     DocManager.Inst.EndUndoGroup();
                 }
             };
+#if !ANDROID
             if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null) {
                 dialog.ShowDialog(desktop.MainWindow);
             }
+#endif
         }
 
         public async void SelectTrackColor() {
             var dialog = new TrackColorDialog();
             dialog.DataContext = new TrackColorViewModel(track);
 
+#if !ANDROID
             if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null) {
                 await dialog.ShowDialog(desktop.MainWindow);
                 TrackAccentColor = ThemeManager.GetTrackColor(track.TrackColor).AccentColor;
@@ -440,6 +443,7 @@ namespace OpenUtau.App.ViewModels {
                 : ThemeManager.GetTrackColor("Blue");
                 RefreshSelectionStyle();
             }
+#endif
         }
 
         public void Duplicate() {
@@ -493,9 +497,11 @@ namespace OpenUtau.App.ViewModels {
         }
 
         public void OpenMixFxDialog() {
+#if !ANDROID
             if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null) {
                 MixFxDialog.Open(desktop.MainWindow, track);
             }
+#endif
         }
     }
 }

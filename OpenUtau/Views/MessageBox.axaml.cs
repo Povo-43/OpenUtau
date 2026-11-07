@@ -34,6 +34,7 @@ namespace OpenUtau.App.Views {
             string text = message;
             string title = ThemeManager.GetString("errors.caption");
             if (fromNotif) {
+#if !ANDROID
                 IReadOnlyList<Window> dialogs = ((IClassicDesktopStyleApplicationLifetime)Application.Current!.ApplicationLifetime!).Windows;
                 foreach (var dialog in dialogs) {
                     if (dialog.IsActive) {
@@ -41,6 +42,7 @@ namespace OpenUtau.App.Views {
                         break;
                     }
                 }
+#endif
             }
 
             var builder = new StringBuilder();
