@@ -3,8 +3,10 @@ using Android.Content;
 using Android.Content.PM;
 using Android.OS;
 using Android.Runtime;
+using AndroidX.AppCompat.App;
 using Avalonia;
 using Avalonia.Android;
+using OpenUtau.Android.Audio;
 using OpenUtau.App.Views;
 using OpenUtau.Core;
 
@@ -18,7 +20,7 @@ namespace OpenUtau.Android;
     Exported = true,
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode | ConfigChanges.FontScale)]
 [IntentFilter(new[] { Intent.ActionMain }, Categories = new[] { Intent.CategoryLauncher })]
-public class MainActivity : AvaloniaActivity
+public class MainActivity : AppCompatActivity
 {
     private AvaloniaView? _avaloniaView;
 
@@ -27,7 +29,7 @@ public class MainActivity : AvaloniaActivity
         base.OnCreate(savedInstanceState);
 
         // Avalonia アプリを構築
-        var builder = AppBuilder.Configure<App>()
+        var builder = AppBuilder.Configure<global::OpenUtau.App.App>()
             .UseAndroid()
             .LogToTrace()
             .With(new SkiaOptions
