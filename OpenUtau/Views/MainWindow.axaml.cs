@@ -639,7 +639,6 @@ namespace OpenUtau.App.Views {
         }
 
         public async Task OpenSingersWindowAsync() {
-#if !ANDROID
             var lifetime = Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
             if (lifetime == null) {
                 return;
@@ -679,7 +678,6 @@ namespace OpenUtau.App.Views {
             if (dialog != null) {
                 ShowToolWindow(dialog);
             }
-#endif
         }
 
         private static void ShowToolWindow(Window window) {
@@ -722,7 +720,6 @@ namespace OpenUtau.App.Views {
         }
 
         void OnMenuPackageManager(object sender, RoutedEventArgs args) {
-#if !ANDROID
             try {
                 var desktop = Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
                 if (desktop == null) {
@@ -740,8 +737,6 @@ namespace OpenUtau.App.Views {
                 dialog.Activate();
             } catch (Exception e) {
                 DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(e));
-#endif
-        }
             }
         }
 
@@ -812,7 +807,6 @@ namespace OpenUtau.App.Views {
         }
 
         void OnMenuDeveloperWindow(object sender, RoutedEventArgs args) {
-#if !ANDROID
             var desktop = Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
             if (desktop == null) {
                 return;
@@ -822,11 +816,9 @@ namespace OpenUtau.App.Views {
                 window = new DeveloperWindow();
             }
             ShowToolWindow(window);
-#endif
         }
 
         void OnMenuPhoneticAssistant(object sender, RoutedEventArgs args) {
-#if !ANDROID
             var desktop = Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
             if (desktop == null) {
                 return;
@@ -836,16 +828,13 @@ namespace OpenUtau.App.Views {
                 window = new PhoneticAssistant();
             }
             ShowToolWindow(window);
-#endif
         }
 
         void OnMenuCheckUpdate(object sender, RoutedEventArgs args) {
-#if !ANDROID
             var dialog = new UpdaterDialog();
             dialog.ViewModel.CloseApplication =
                 () => (Application.Current?.ApplicationLifetime as IControlledApplicationLifetime)?.Shutdown();
             dialog.ShowDialog(this);
-#endif
         }
 
         void OnMenuLogsLocation(object sender, RoutedEventArgs args) {
