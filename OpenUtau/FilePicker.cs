@@ -214,6 +214,7 @@ namespace OpenUtau.App {
             return result;
         }
 
+        {
 #if ANDROID
             return await OpenFilesAndroid(window, titleKey, startLocation, types);
 #else
@@ -310,13 +311,13 @@ namespace OpenUtau.App {
 
         public async static Task<string?> SaveFile
             (Window window, string titleKey, string? startLocation, string? filename, params FilePickerFileType[] types) {
+#if ANDROID
+            return await SaveFileAndroid(window, titleKey, startLocation, filename, types);
+#else
             var location = startLocation == null
                 ? null
                 : await window.StorageProvider.TryGetFolderFromPathAsync(startLocation);
 
-#if ANDROID
-            return await SaveFileAndroid(window, titleKey, startLocation, filename, types);
-#else
             var file = await window.StorageProvider.SaveFilePickerAsync(
                  new FilePickerSaveOptions {
                      Title = ThemeManager.GetString(titleKey),
