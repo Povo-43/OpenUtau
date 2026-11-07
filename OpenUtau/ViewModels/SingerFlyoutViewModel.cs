@@ -327,10 +327,9 @@ namespace OpenUtau.App.ViewModels {
 
         public async void InstallSinger() {
             CloseRequested?.Invoke();
-#if ANDROID
-            return;
-#else
-            var mainWindow = (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)
+            MainWindow? mainWindow = null;
+#if !ANDROID
+            mainWindow = (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)
                 ?.MainWindow as MainWindow;
             if (mainWindow == null) {
                 return;

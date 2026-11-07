@@ -37,7 +37,7 @@ namespace OpenUtau.App {
             }
 #else
             // Android: single-window app, show MainWindow directly
-            this.MainWindow = new Views.MainWindow();
+            Application.Current!.MainWindow = new Views.MainWindow();
 #endif
 
             base.OnFrameworkInitializationCompleted();
