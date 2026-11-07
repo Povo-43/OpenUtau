@@ -5,7 +5,7 @@
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
   <uses-permission android:name="android.permission.RECORD_AUDIO" />
   <application
-      android:name="com.stakira.openutau.OpenUtauApplication"
+      android:name=".OpenUtauApplication"
       android:allowBackup="true"
       android:icon="@drawable/icon"
       android:label="OpenUtau"
@@ -13,7 +13,7 @@
       android:resizeableActivity="true"
       android:hardwareAccelerated="true">
     <activity
-        android:name="MainActivity"
+        android:name=".MainActivity"
         android:exported="true"
         android:configChanges="orientation|screenSize|uiMode|fontScale"
         android:launchMode="singleTask"

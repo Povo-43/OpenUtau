@@ -7,6 +7,7 @@ using OpenUtau.Core;
 
 namespace OpenUtau.Android;
 
+[Register("com.stakira.openutau.OpenUtauApplication")]
 [Application]
 public class OpenUtauApplication : AvaloniaAndroidApplication<global::OpenUtau.App.App> {
     protected OpenUtauApplication(nint javaReference, JniHandleOwnership transfer)

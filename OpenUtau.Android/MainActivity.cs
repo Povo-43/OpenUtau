@@ -2,10 +2,12 @@ using Android.App;
 using Android.Content;
 using Android.Content.PM;
 using Android.OS;
+using Android.Runtime;
 using Avalonia.Android;
 
 namespace OpenUtau.Android;
 
+[Register("com.stakira.openutau.MainActivity")]
 [Activity(
     Label = "OpenUtau",
     Theme = "@style/MyTheme",
