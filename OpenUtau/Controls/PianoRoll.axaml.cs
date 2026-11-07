@@ -110,8 +110,6 @@ namespace OpenUtau.App.Controls {
                         var mainWindow =
                             (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)
                             ?.MainWindow! as MainWindow;
-#else
-                        MainWindow? mainWindow = null;
 #endif
                         var name = ThemeManager.GetString(edit.Name);
                         await MessageBox.ShowProcessing(RootWindow, $"{name} - ? / ?",
