@@ -92,11 +92,15 @@ namespace OpenUtau.App {
                         statusText.Text = DescribeException(e);
                     }
                 };
+                long lastUiHeartbeat = DateTime.UtcNow.Ticks;
+                void TrackUiHeartbeat() => Volatile.Write(ref lastUiHeartbeat, DateTime.UtcNow.Ticks);
+                var startupDone = new VolatileBool();
                 stuckTimer.Tick += (_, _) => {
                     if (loadingView.Content != loadingPanel) {
                         stuckTimer.Stop();
                         return;
                     }
+                    TrackUiHeartbeat();
                     var elapsed = (int)(DateTime.UtcNow - startedAt).TotalSeconds;
                     statusText.IsVisible = true;
                     statusText.Text = $"Still working… {elapsed}s elapsed. " +
@@ -104,7 +108,36 @@ namespace OpenUtau.App {
                     copyLogButton.IsVisible = elapsed >= 15;
                 };
                 stuckTimer.Start();
-                void StopStuckTimer() => stuckTimer.Stop();
+                void StopStuckTimer() {
+                    startupDone.Value = true;
+                    stuckTimer.Stop();
+                }
+
+#if ANDROID
+                // If the timer stops receiving ticks, the timer queue on the UI thread
+                // is probably out of new frames and frozen. At least record which
+                // startup stage we were in when it froze, so the log file identifies
+                // the culprit.
+                var uiFrozenWatchdog = new Thread(() => {
+                    while (!startupDone.Value) {
+                        Thread.Sleep(TimeSpan.FromSeconds(10));
+                        if (startupDone.Value) {
+                            return;
+                        }
+                        var idle = (DateTime.UtcNow.Ticks - Volatile.Read(ref lastUiHeartbeat))
+                            / TimeSpan.TicksPerSecond;
+                        if (idle < 40) {
+                            continue;
+                        }
+                        Log.Error("UI thread has not pumped for {Idle}s while showing \"{Stage}\" — frozen.",
+                            idle, loadingText.Text);
+                    }
+                }) {
+                    IsBackground = true,
+                    Name = "ui-freeze-watchdog",
+                };
+                uiFrozenWatchdog.Start();
+#endif
 
                 var mainThread = Thread.CurrentThread;
                 var mainScheduler = TaskScheduler.FromCurrentSynchronizationContext();
@@ -136,11 +169,16 @@ namespace OpenUtau.App {
                         }
                         try {
                             loadingText.Text = "Creating main window…";
+                            Log.Information("Startup stage: creating main window.");
                             var mainWindow = new Views.MainWindow();
+                            Log.Information("Startup stage: attaching main view.");
                             singleView.MainView = mainWindow;
                             loadingText.Text = "Opening project…";
+                            Log.Information("Startup stage: initializing project.");
                             mainWindow.InitProject();
+                            Log.Information("Startup stage: initializing loading window.");
                             LoadingWindow.InitializeLoadingWindow();
+                            Log.Information("Startup completed.");
                         } catch (Exception e) {
                             Log.Error(e, "Failed to create main window.");
                             ShowStartupError(loadingView, errorText, e);
@@ -153,6 +191,18 @@ namespace OpenUtau.App {
 
             base.OnFrameworkInitializationCompleted();
             UiFontManager.Apply();
+        }
+
+        /// <summary>
+        /// Read/write a bool from any thread with volatile semantics; used by the
+        /// UI-freeze watchdog to observe startup completion.
+        /// </summary>
+        private sealed class VolatileBool {
+            bool backing;
+            public bool Value {
+                get => Volatile.Read(ref backing);
+                set => Volatile.Write(ref backing, value);
+            }
         }
 
         /// <summary>
