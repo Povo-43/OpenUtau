@@ -3,6 +3,7 @@ using Android.Content;
 using Android.Content.PM;
 using Android.OS;
 using Android.Runtime;
+using Android.Views;
 using Avalonia.Android;
 using OpenUtau.Android.Audio;
 using OpenUtau.Core;
@@ -23,6 +24,14 @@ public class MainActivity : AvaloniaMainActivity {
         base.OnCreate(savedInstanceState);
         // Android オーディオ出力 (AudioTrack) を再生エンジンに差し替え
         PlaybackManager.Inst.AudioOutput = new AndroidAudioOutput();
+
+        // ステータスバーの高さをアプリ側に通知し、コンテンツを下に押し出す
+        // パディングに使ってもらう（メニューバーとステータスバーの重なり防止）。
+        var resId = Resources.GetIdentifier("status_bar_height", "dimen", "android");
+        if (resId > 0) {
+            OpenUtau.App.App.StatusBarHeight = Resources.GetDimensionPixelSize(resId);
+            Log.Information("Android status bar height: {Height:F0}px.", OpenUtau.App.App.StatusBarHeight);
+        }
     }
 
     public override void OnBackPressed() {

@@ -81,9 +81,24 @@ namespace OpenUtau.App {
                 // the platform re-attaching the whole content, which on some devices
                 // never completes and leaves the app on the last frame; swapping a
                 // child of an already attached control always works.
-                var rootHost = new Panel();
-                rootHost.Children.Add(loadingView);
+                var rootHost = new Border();
+                rootHost.Child = loadingView;
                 singleView.MainView = rootHost;
+
+#if ANDROID
+                // Push content below the status bar so the menu bar and controls
+                // don't overlap the system UI. The height is set by MainActivity
+                // after Android resources are available; LayoutUpdated retries
+                // until it is non-zero.
+                void ApplyStatusBarPadding() {
+                    if (StatusBarHeight > 0) {
+                        rootHost.Padding = new Thickness(0, StatusBarHeight, 0, 0);
+                        Log.Information("Status bar height: {Height:F0}, padding applied.", StatusBarHeight);
+                    }
+                }
+                ApplyStatusBarPadding();
+                rootHost.LayoutUpdated += (_, _) => ApplyStatusBarPadding();
+#endif
 
                 // If startup takes unusually long, surface a log copy button so the
                 // user can report where it is stuck.
@@ -239,8 +254,7 @@ namespace OpenUtau.App {
                             var mainWindow = new Views.MainWindow();
                             Log.Information("Startup stage: attaching main view.");
                             UiStage = "attaching main view";
-                            rootHost.Children.Clear();
-                            rootHost.Children.Add(mainWindow);
+                            rootHost.Child = mainWindow;
                             rootHost.InvalidateMeasure();
                             loadingText.Text = "Opening project…";
                             Log.Information("Startup stage: initializing project.");
@@ -254,8 +268,7 @@ namespace OpenUtau.App {
                             Log.Error(e, "Failed to create main window.");
                             UiStage = "main window failed";
                             ShowStartupError(loadingView, errorText, e);
-                            rootHost.Children.Clear();
-                            rootHost.Children.Add(loadingView);
+                            rootHost.Child = loadingView;
                         }
                         StopStuckTimer(mainViewExpected);
                     }, mainScheduler);
@@ -266,10 +279,6 @@ namespace OpenUtau.App {
             UiFontManager.Apply();
         }
 
-        /// <summary>
-        /// Read/write a bool from any thread with volatile semantics; used by the
-        /// UI-freeze watchdog to observe startup completion.
-        /// </summary>
         private sealed class VolatileBool {
             bool backing;
             public bool Value {
@@ -277,6 +286,12 @@ namespace OpenUtau.App {
                 set => Volatile.Write(ref backing, value);
             }
         }
+
+        /// <summary>
+        /// Android 側で設定されるステータスバーの高さ（ピクセル）。
+        /// コンテンツをステータスバーの下に押し出す際のパディングに使用する。
+        /// </summary>
+        public static double StatusBarHeight { get; set; }
 
         /// <summary>
         /// Unix ticks of the last UI-thread heartbeat. Fed by the loading timer and,
