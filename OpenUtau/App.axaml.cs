@@ -2,12 +2,15 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Input.Platform;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using OpenUtau.App.Views;
@@ -19,6 +22,11 @@ namespace OpenUtau.App {
     public class App : Application {
         public override void Initialize() {
             Log.Information("Initializing application.");
+            // Desktop Program.Main registers this, but the Android entry point never
+            // runs Program.Main. Without it, Encoding.GetEncoding("shift_jis") fails,
+            // which breaks UST files and voicebank loading (static initializers in
+            // Ust/EnunuUtils). Registration is idempotent.
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             AvaloniaXamlLoader.Load(this);
 #if DEBUG
             this.AttachDeveloperTools();
@@ -39,11 +47,17 @@ namespace OpenUtau.App {
             // Android: single-view app. The real MainWindow view is used as the
             // root; dialogs are shown as in-app overlays (see DialogHost).
             if (ApplicationLifetime is ISingleViewApplicationLifetime singleView) {
-                var loadingView = new TextBlock {
-                    Text = "Loading OpenUtau…",
-                    FontSize = 18,
-                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
-                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                var errorText = new TextBlock {
+                    FontSize = 12,
+                    TextWrapping = TextWrapping.Wrap,
+                };
+                var loadingView = new ScrollViewer {
+                    Content = new TextBlock {
+                        Text = "Loading OpenUtau…",
+                        FontSize = 18,
+                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                        VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                    },
                 };
                 singleView.MainView = loadingView;
 
@@ -53,7 +67,7 @@ namespace OpenUtau.App {
                     .ContinueWith(t => {
                         if (t.IsFaulted) {
                             Log.Error(t.Exception, "Failed to start OpenUtau.");
-                            loadingView.Text = "Failed to start OpenUtau:\n" + t.Exception?.GetBaseException().Message;
+                            ShowStartupError(loadingView, errorText, t.Exception);
                             return;
                         }
                         try {
@@ -63,7 +77,7 @@ namespace OpenUtau.App {
                             LoadingWindow.InitializeLoadingWindow();
                         } catch (Exception e) {
                             Log.Error(e, "Failed to create main window.");
-                            loadingView.Text = "Failed to start OpenUtau:\n" + e.Message;
+                            ShowStartupError(loadingView, errorText, e);
                             singleView.MainView = loadingView;
                         }
                     }, mainScheduler);
@@ -72,6 +86,41 @@ namespace OpenUtau.App {
 
             base.OnFrameworkInitializationCompleted();
             UiFontManager.Apply();
+        }
+
+        /// <summary>
+        /// Shows a startup failure with the full exception chain (types, messages and the
+        /// deepest stack trace) instead of a single line, and copies the detail to the
+        /// clipboard so it can be pasted into a bug report.
+        /// </summary>
+        void ShowStartupError(ScrollViewer container, TextBlock errorText, Exception? exception) {
+            string detail = DescribeException(exception);
+            Log.Information("Startup failure detail:\n{Detail}", detail);
+            errorText.Text = "Failed to start OpenUtau:\n\n" + detail
+                + "\n(This text was copied to the clipboard. Please report it.)";
+            container.Content = errorText;
+            // Best-effort clipboard copy; the clipboard may be unavailable on some platforms.
+            try {
+                _ = TopLevel.GetTopLevel(errorText)?.Clipboard?.SetTextAsync(detail);
+            } catch (Exception e) {
+                Log.Error(e, "Failed to copy startup error to clipboard.");
+            }
+        }
+
+        internal static string DescribeException(Exception? exception) {
+            var sb = new StringBuilder();
+            var deepest = exception;
+            int depth = 0;
+            for (var cur = exception; cur != null; cur = cur.InnerException, depth++) {
+                sb.Append(new string(' ', depth * 2));
+                sb.Append(depth == 0 ? string.Empty : "-> ");
+                sb.AppendLine($"{cur.GetType().FullName}: {cur.Message}");
+                deepest = cur;
+            }
+            sb.AppendLine();
+            sb.AppendLine("---- Stack trace of the deepest exception ----");
+            sb.AppendLine(deepest?.StackTrace ?? "(no stack trace)");
+            return sb.ToString();
         }
 
         // Program.InitLogging() only hooks AppDomain.UnhandledException, which can log but can not
