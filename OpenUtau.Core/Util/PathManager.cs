@@ -89,6 +89,11 @@ namespace OpenUtau.Core {
         public bool IsInstalled { get; private set; }
         public bool IsAppImage { get; private set; }
         public string AppImagePath { get; private set; }
+        /// <summary>
+        /// Set by the Android host to the app's external files directory, where log
+        /// files are also written so they are reachable over USB/MTP.
+        /// </summary>
+        public static string? ExternalLogDirectory { get; set; }
         public string SingersPathOld => Path.Combine(DataPath, "Content", "Singers");
         public string SingersPath => Path.Combine(DataPath, "Singers");
         public string AdditionalSingersPath => Preferences.Default.AdditionalSingerPath;

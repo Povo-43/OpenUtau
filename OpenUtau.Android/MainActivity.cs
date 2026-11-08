@@ -6,6 +6,7 @@ using Android.Runtime;
 using Avalonia.Android;
 using OpenUtau.Android.Audio;
 using OpenUtau.Core;
+using Serilog;
 
 namespace OpenUtau.Android;
 
@@ -30,5 +31,19 @@ public class MainActivity : AvaloniaMainActivity {
             return;
         }
         base.OnBackPressed();
+    }
+
+    protected override void OnDestroy() {
+        // 戻るボタン等で閉じたらプロセスごと終了する。Android はプロセスをキャッシュして
+        // 再オープン時に使い回すが、その場合 Avalonia の App インスタンスやビューが前回の
+        // (破棄済みアクティビティに紐づく)もののまま再利用され、起動シーケンスが再実行されず
+        // ローディング画面のまま固まる。毎回クリーンなプロセスで起動する方が安定する。
+        // (向き変更などは ConfigurationChanges で処理されるため OnDestroy は呼ばれない)
+        if (IsFinishing) {
+            Log.Information("Activity finishing; exiting the process for a clean next launch.");
+            Log.CloseAndFlush();
+            Java.Lang.JavaSystem.Exit(0);
+        }
+        base.OnDestroy();
     }
 }

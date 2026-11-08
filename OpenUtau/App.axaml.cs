@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -57,8 +58,53 @@ namespace OpenUtau.App {
                     HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
                     VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
                 };
-                var loadingView = new ScrollViewer { Content = loadingText };
+                var statusText = new TextBlock {
+                    FontSize = 12,
+                    Margin = new Thickness(0, 8, 0, 0),
+                    TextAlignment = TextAlignment.Center,
+                    IsVisible = false,
+                };
+                var copyLogButton = new Button {
+                    Content = "Copy log to clipboard",
+                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                    Margin = new Thickness(0, 8, 0, 0),
+                    IsVisible = false,
+                };
+                var loadingPanel = new StackPanel {
+                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                    Children = { loadingText, statusText, copyLogButton },
+                };
+                var loadingView = new ScrollViewer { Content = loadingPanel };
                 singleView.MainView = loadingView;
+
+                // If startup takes unusually long, surface a log copy button so the
+                // user can report where it is stuck.
+                var startedAt = DateTime.UtcNow;
+                var stuckTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
+                copyLogButton.Click += async (_, _) => {
+                    try {
+                        await TopLevel.GetTopLevel(loadingView)!.Clipboard!
+                            .SetTextAsync(CollectStartupLogs());
+                        copyLogButton.Content = "Copied! Please paste it in the report.";
+                    } catch (Exception e) {
+                        Log.Error(e, "Failed to copy startup log.");
+                        statusText.Text = DescribeException(e);
+                    }
+                };
+                stuckTimer.Tick += (_, _) => {
+                    if (loadingView.Content != loadingPanel) {
+                        stuckTimer.Stop();
+                        return;
+                    }
+                    var elapsed = (int)(DateTime.UtcNow - startedAt).TotalSeconds;
+                    statusText.IsVisible = true;
+                    statusText.Text = $"Still working… {elapsed}s elapsed. " +
+                        "If this does not finish, tap the button below and report the log.";
+                    copyLogButton.IsVisible = elapsed >= 15;
+                };
+                stuckTimer.Start();
+                void StopStuckTimer() => stuckTimer.Stop();
 
                 var mainThread = Thread.CurrentThread;
                 var mainScheduler = TaskScheduler.FromCurrentSynchronizationContext();
@@ -70,6 +116,7 @@ namespace OpenUtau.App {
                         if (t.IsFaulted) {
                             Log.Error(t.Exception, "Failed to start OpenUtau.");
                             ShowStartupError(loadingView, errorText, t.Exception);
+                            StopStuckTimer();
                             return;
                         }
                         try {
@@ -84,12 +131,50 @@ namespace OpenUtau.App {
                             ShowStartupError(loadingView, errorText, e);
                             singleView.MainView = loadingView;
                         }
+                        StopStuckTimer();
                     }, mainScheduler);
             }
 #endif
 
             base.OnFrameworkInitializationCompleted();
             UiFontManager.Apply();
+        }
+
+        /// <summary>
+        /// Collects the most recent log files (internal data dir + Android external
+        /// app dir) for a bug report.
+        /// </summary>
+        internal static string CollectStartupLogs() {
+            var sb = new StringBuilder();
+            sb.AppendLine($"App version: {typeof(App).Assembly.GetName().Version}");
+            sb.AppendLine($"Time: {DateTime.UtcNow:O}");
+            var dirs = new[] { PathManager.Inst.LogsPath, PathManager.ExternalLogDirectory };
+            foreach (var dir in dirs) {
+                if (string.IsNullOrEmpty(dir) || !Directory.Exists(dir)) {
+                    continue;
+                }
+                try {
+                    var newest = Directory.GetFiles(dir)
+                        .OrderByDescending(f => File.GetLastWriteTimeUtc(f))
+                        .FirstOrDefault();
+                    if (newest == null) {
+                        sb.AppendLine($"(no log files in {dir})");
+                        continue;
+                    }
+                    sb.AppendLine($"---- {newest} (last 400 lines) ----");
+                    using var reader = new StreamReader(newest);
+                    var allLines = new List<string>();
+                    while (reader.ReadLine() is { } line) {
+                        allLines.Add(line);
+                    }
+                    foreach (var line in allLines.TakeLast(400)) {
+                        sb.AppendLine(line);
+                    }
+                } catch (Exception e) {
+                    sb.AppendLine($"Failed to read logs in {dir}: {DescribeException(e)}");
+                }
+            }
+            return sb.ToString();
         }
 
         /// <summary>
