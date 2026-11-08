@@ -24,6 +24,7 @@
                        MinHeight="{Binding NotesViewModel.ExpHeightMin}"
                        MaxHeight="{Binding NotesViewModel.ExpHeightMax}"/>
         <RowDefinition Height="4"/>
+        <RowDefinition Height="Auto"/>
       </Grid.RowDefinitions>
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="60"/>
@@ -711,16 +712,28 @@
         <Grid>
           <Border Classes="tips" HorizontalAlignment="Center" VerticalAlignment="Center"
                 IsVisible="{Binding NotesViewModel.ShowTips}" BoxShadow="0 0 5 1 #3F000000">
-            <TextBlock Classes="tips" Grid.Column="0" Margin="10,5"
-                       Text="{DynamicResource tip.notes.basics}"/>
+            <Grid>
+              <TextBlock Classes="tips" Margin="10,5"
+                         Text="{DynamicResource tip.notes.basics}"/>
+              <Button Content="×" HorizontalAlignment="Right" VerticalAlignment="Top"
+                      Click="CloseTips_Click" Margin="0" Padding="8,4" Background="Transparent" BorderThickness="0"/>
+            </Grid>
           </Border>
           <Border Classes="tips" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0" Padding="4,4,4,2"
                    IsVisible="{Binding NotesViewModel.ShowTips}" BoxShadow="0 0 5 1 #3F000000">
-            <TextBlock Classes="tips" Text="{DynamicResource tip.notes.zoomx}"/>
+            <Grid>
+              <TextBlock Classes="tips" Text="{DynamicResource tip.notes.zoomx}"/>
+              <Button Content="×" HorizontalAlignment="Right" VerticalAlignment="Top"
+                      Click="CloseTips_Click" Margin="0" Padding="8,4" Background="Transparent" BorderThickness="0"/>
+            </Grid>
           </Border>
           <Border Classes="tips" HorizontalAlignment="Right" VerticalAlignment="Top" Padding="4,4,4,2"
                    IsVisible="{Binding NotesViewModel.ShowTips}" BoxShadow="0 0 5 1 #3F000000">
-            <TextBlock Classes="tips" Text="{DynamicResource tip.notes.zoomy}"/>
+            <Grid>
+              <TextBlock Classes="tips" Text="{DynamicResource tip.notes.zoomy}"/>
+              <Button Content="×" HorizontalAlignment="Right" VerticalAlignment="Top"
+                      Click="CloseTips_Click" Margin="0" Padding="8,4" Background="Transparent" BorderThickness="0"/>
+            </Grid>
           </Border>
           <Border HorizontalAlignment="Center" VerticalAlignment="Center" Padding="10,5"
                 IsVisible="{Binding NotesViewModel.PlayPosWaitingRendering}" Background="{DynamicResource BackgroundBrushSemi}">
@@ -739,8 +752,12 @@
               ClipToBounds="True" IsHitTestVisible="False">
         <Border Classes="tips" HorizontalAlignment="Center" VerticalAlignment="Center"
                 IsVisible="{Binding NotesViewModel.ShowTips}" BoxShadow="0 0 5 1 #3F000000">
-          <TextBlock Classes="tips" Grid.Column="0" Margin="10,5"
-                     Text="{DynamicResource tip.exps}"/>
+          <Grid>
+            <TextBlock Classes="tips" Margin="10,5"
+                       Text="{DynamicResource tip.exps}"/>
+            <Button Content="×" HorizontalAlignment="Right" VerticalAlignment="Top"
+                    Click="CloseTips_Click" Margin="0" Padding="8,4" Background="Transparent" BorderThickness="0"/>
+          </Grid>
         </Border>
       </Border>
       <Border Grid.Row="2" Grid.Column="2" Background="Transparent"
@@ -756,6 +773,20 @@
         </Border>
       </Canvas>
       <ProgressBar Grid.Row="6" Grid.ColumnSpan="4" Value="{Binding Progress}" IsVisible="{Binding PianoRollDetached}"/>
+      <Border Grid.Row="7" Grid.ColumnSpan="4" Background="#22000000" CornerRadius="0">
+        <Grid ColumnDefinitions="*,Auto,Auto,Auto,*" Margin="4">
+          <TextBlock Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"
+                     Text="物理キー" Foreground="#CCCCCC" FontSize="12" Margin="8,0"/>
+          <ToggleButton Grid.Column="1" Name="ShiftKey" Content="Shift" Height="36" Width="64"
+                        Margin="4" FontSize="14" Click="ModifierKey_Click"/>
+          <ToggleButton Grid.Column="2" Name="CtrlKey" Content="Ctrl" Height="36" Width="64"
+                        Margin="4" FontSize="14" Click="ModifierKey_Click"/>
+          <ToggleButton Grid.Column="3" Name="AltKey" Content="Alt" Height="36" Width="64"
+                        Margin="4" FontSize="14" Click="ModifierKey_Click"/>
+          <Button Grid.Column="4" Name="KeyboardBtn" Content="キーボード" Height="36" Width="88"
+                  Margin="4" FontSize="14" Click="KeyboardBtn_Click"/>
+        </Grid>
+      </Border>
     </Grid>
   </Border>
 </UserControl>

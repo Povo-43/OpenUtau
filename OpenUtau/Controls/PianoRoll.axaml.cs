@@ -2204,5 +2204,26 @@ namespace OpenUtau.App.Controls {
                 }
             }
         }
+
+        private void CloseTips_Click(object sender, Avalonia.Interactivity.RoutedEventArgs e) {
+            if (DataContext is PianoRollViewModel vm && vm.NotesViewModel is { } notesVm) {
+                notesVm.ShowTips = false;
+            }
+        }
+
+        private void ModifierKey_Click(object sender, Avalonia.Interactivity.RoutedEventArgs e) {
+            if (sender is ToggleButton btn) {
+                // モディファイアキーのトグル状態は ToggleButton の IsChecked で保持。
+                // 実際のキー入力合成は PianoRoll のキーボードイベントハンドラで
+                // これを参照するように後続で実装する。
+                Log.Information("Modifier key {Key}: {State}", btn.Content, btn.IsChecked);
+            }
+        }
+
+        private void KeyboardBtn_Click(object sender, Avalonia.Interactivity.RoutedEventArgs e) {
+            // Android のソフトキーボード表示は MainActivity 側で実装。
+            // ここではログのみ。MainActivity 経由で連携させる予定。
+            Log.Information("Soft keyboard requested (Android-side implementation pending).");
+        }
     }
 }
