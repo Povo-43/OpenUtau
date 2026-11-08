@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Android;
 using OpenUtau.Android.Audio;
 using OpenUtau.Core;
+using ReactiveUI.Avalonia;
 
 namespace OpenUtau.Android;
 
@@ -23,6 +24,11 @@ public class OpenUtauApplication : AvaloniaAndroidApplication<global::OpenUtau.A
     protected override AppBuilder CustomizeAppBuilder(AppBuilder builder) {
         return base.CustomizeAppBuilder(builder)
             .LogToTrace()
+            // Required for ReactiveUI (RxApp static initialization); the desktop
+            // builder does the same in Program.BuildAvaloniaApp. Without it the
+            // first ViewModel creation fails with "ReactiveUI has not been
+            // initialized".
+            .UseReactiveUI(_ => { })
             .With(new SkiaOptions
             {
                 MaxGpuResourceSizeBytes = 256 * 1024 * 1024 // 256 MB
