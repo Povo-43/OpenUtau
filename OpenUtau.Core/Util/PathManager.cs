@@ -14,7 +14,12 @@ namespace OpenUtau.Core {
 
     public class PathManager : SingletonBase<PathManager> {
         public PathManager() {
-            RootPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+            // Assembly.GetEntryAssembly() returns null under the Android Mono runtime,
+            // where AppContext.BaseDirectory (the app's native library directory) is
+            // used instead. Desktop builds keep using the entry assembly location.
+            var entryLocation = Assembly.GetEntryAssembly()?.Location;
+            RootPath = Path.TrimEndingDirectorySeparator(
+                string.IsNullOrEmpty(entryLocation) ? AppContext.BaseDirectory : entryLocation);
             if (OS.IsMacOS()) {
                 string userHome = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
                 DataPath = Path.Combine(userHome, "Library", "OpenUtau");
