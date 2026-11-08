@@ -87,6 +87,13 @@ namespace OpenUtau {
                     return "linux-arm64";
                 }
                 return "linux-x64";
+            } else if (IsAndroid()) {
+                // Android builds are distributed as APKs from the releases page;
+                // there is no self-update channel, but returning a name keeps the
+                // update check from throwing when it is reached.
+                return RuntimeInformation.ProcessArchitecture == Architecture.Arm64
+                    ? "android-arm64"
+                    : "android";
             }
             throw new NotSupportedException();
         }

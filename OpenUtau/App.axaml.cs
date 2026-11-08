@@ -76,7 +76,14 @@ namespace OpenUtau.App {
                     Children = { loadingText, statusText, copyLogButton },
                 };
                 var loadingView = new ScrollViewer { Content = loadingPanel };
-                singleView.MainView = loadingView;
+                // Assign the single view root exactly once, then swap its children.
+                // Replacing ISingleViewApplicationLifetime.MainView later relies on
+                // the platform re-attaching the whole content, which on some devices
+                // never completes and leaves the app on the last frame; swapping a
+                // child of an already attached control always works.
+                var rootHost = new Panel();
+                rootHost.Children.Add(loadingView);
+                singleView.MainView = rootHost;
 
                 // If startup takes unusually long, surface a log copy button so the
                 // user can report where it is stuck.
@@ -106,62 +113,85 @@ namespace OpenUtau.App {
                     copyLogButton.IsVisible = elapsed >= 15;
                 };
                 stuckTimer.Start();
-                void StopStuckTimer() {
+                long mainViewExpectedTicks = 0;
+                void StopStuckTimer(bool expectingMainView = false) {
                     startupDone.Value = true;
                     stuckTimer.Stop();
                     UiStage = "running";
+                    if (expectingMainView) {
+                        mainViewExpectedTicks = DateTime.UtcNow.Ticks;
+                    }
                 }
 
 #if ANDROID
                 // Watchdog: the UI thread must keep pumping. The loading timer feeds
                 // the heartbeat during startup and the main window heartbeat timer
-                // afterwards. When it goes silent, record the stage; when it stays
-                // silent, exit the process so the next tap starts a clean one instead
-                // of leaving a frozen app on screen. A marker file limits automatic
-                // restarts so a deterministic hang cannot create a restart loop.
+                // afterwards. When the UI thread goes silent, or the main view never
+                // attaches to the visual tree, record the stage and exit the process
+                // so the next tap starts a clean one instead of leaving a frozen app
+                // on screen. A marker file limits automatic restarts so a
+                // deterministic hang cannot create a restart loop.
+                void RecoverFrozen(string reason) {
+                    try {
+                        var marker = Path.Combine(PathManager.Inst.DataPath, "ui-restarts.txt");
+                        int count = 1;
+                        long stamp = 0;
+                        if (File.Exists(marker)) {
+                            var parts = File.ReadAllText(marker).Split(' ');
+                            stamp = long.Parse(parts[0]);
+                            count = int.Parse(parts[1]);
+                            if (DateTime.UtcNow.Ticks - stamp > TimeSpan.FromMinutes(4).Ticks) {
+                                count = 0;
+                            }
+                        }
+                        if (count >= 2) {
+                            Log.Error("{Reason}; not auto-restarting again (count {Count}).", reason, count);
+                            return;
+                        }
+                        File.WriteAllText(marker, $"{DateTime.UtcNow.Ticks} {count + 1}");
+                        Log.Error("{Reason}; restarting the process to recover (attempt {Count}).", reason, count + 1);
+                        Log.CloseAndFlush();
+                    } catch (Exception e) {
+                        Log.Error(e, "Failed to handle the restart marker.");
+                        Log.CloseAndFlush();
+                    }
+                    RequestRestartProcess();
+                }
+
                 var uiFrozenWatchdog = new Thread(() => {
                     int lastLoggedIdle = int.MinValue;
                     while (true) {
                         Thread.Sleep(TimeSpan.FromSeconds(10));
                         int idle = (int)((DateTime.UtcNow.Ticks - Volatile.Read(ref LastUiHeartbeat))
                             / TimeSpan.TicksPerSecond);
-                        if (idle < 40) {
+                        if (idle >= 40) {
+                            if (lastLoggedIdle < 0 || idle - lastLoggedIdle >= 60) {
+                                Log.Error("UI thread has not pumped for {Idle}s (stage: {Stage}) — frozen.",
+                                    idle, UiStage);
+                                lastLoggedIdle = idle;
+                            }
+                            if (idle >= 60) {
+                                RecoverFrozen($"UI thread frozen (stage: {UiStage})");
+                                return;
+                            }
+                        } else {
                             lastLoggedIdle = 0;
-                            continue;
                         }
-                        if (lastLoggedIdle < 0 || idle - lastLoggedIdle >= 60) {
-                            Log.Error("UI thread has not pumped for {Idle}s (stage: {Stage}) — frozen.",
-                                idle, UiStage);
-                            lastLoggedIdle = idle;
-                        }
-                        if (idle < 60) {
-                            continue;
-                        }
-                        try {
-                            var marker = Path.Combine(PathManager.Inst.DataPath, "ui-restarts.txt");
-                            int count = 1;
-                            long stamp = 0;
-                            if (File.Exists(marker)) {
-                                var parts = File.ReadAllText(marker).Split(' ');
-                                stamp = long.Parse(parts[0]);
-                                count = int.Parse(parts[1]);
-                                if (DateTime.UtcNow.Ticks - stamp > TimeSpan.FromMinutes(4).Ticks) {
-                                    count = 0;
-                                }
+                        // The app can also stall without the UI thread going quiet:
+                        // the main view may never be attached (nothing is rendered,
+                        // the last frame stays on screen).
+                        if (mainViewExpectedTicks != 0 && Views.MainWindow.Instance == null) {
+                            var waited = (int)((DateTime.UtcNow.Ticks - mainViewExpectedTicks)
+                                / TimeSpan.TicksPerSecond);
+                            if (waited % 30 == 0) {
+                                Log.Error("Main view has not attached {Waited}s after startup (stage: {Stage}).",
+                                    waited, UiStage);
                             }
-                            if (count >= 2) {
-                                Log.Error("UI froze repeatedly; not auto-restarting again (count {Count}).", count);
-                                continue;
+                            if (waited >= 30) {
+                                RecoverFrozen($"Main view never attached (stage: {UiStage}, waited {waited}s)");
+                                return;
                             }
-                            File.WriteAllText(marker, $"{DateTime.UtcNow.Ticks} {count + 1}");
-                            Log.Error("UI thread frozen (stage: {Stage}); restarting the process to recover (attempt {Count}).",
-                                UiStage, count + 1);
-                            Log.CloseAndFlush();
-                        } catch (Exception e) {
-                            Log.Error(e, "Failed to handle the restart marker.");
-                            Log.CloseAndFlush();
                         }
-                        RequestRestartProcess();
                     }
                 }) {
                     IsBackground = true,
@@ -175,7 +205,10 @@ namespace OpenUtau.App {
                 Task.Run(() => AppStartup.InitializeCore(mainThread, mainScheduler,
                         // Show each startup step on screen; the last visible step
                         // identifies where startup is stuck on a device.
-                        step => Dispatcher.UIThread.Post(() => loadingText.Text = step)))
+                        step => Dispatcher.UIThread.Post(() => {
+                            loadingText.Text = step;
+                            Log.Information("Startup screen: {Step}", step);
+                        })))
                     .ContinueWith(t => {
                         if (t.IsFaulted) {
                             Log.Error(t.Exception, "Failed to start OpenUtau.");
@@ -198,6 +231,7 @@ namespace OpenUtau.App {
                             StopStuckTimer();
                             return;
                         }
+                        bool mainViewExpected = false;
                         try {
                             loadingText.Text = "Creating main window…";
                             Log.Information("Startup stage: creating main window.");
@@ -205,7 +239,9 @@ namespace OpenUtau.App {
                             var mainWindow = new Views.MainWindow();
                             Log.Information("Startup stage: attaching main view.");
                             UiStage = "attaching main view";
-                            singleView.MainView = mainWindow;
+                            rootHost.Children.Clear();
+                            rootHost.Children.Add(mainWindow);
+                            rootHost.InvalidateMeasure();
                             loadingText.Text = "Opening project…";
                             Log.Information("Startup stage: initializing project.");
                             UiStage = "initializing project";
@@ -213,13 +249,15 @@ namespace OpenUtau.App {
                             Log.Information("Startup stage: initializing loading window.");
                             LoadingWindow.InitializeLoadingWindow();
                             Log.Information("Startup completed.");
+                            mainViewExpected = true;
                         } catch (Exception e) {
                             Log.Error(e, "Failed to create main window.");
                             UiStage = "main window failed";
                             ShowStartupError(loadingView, errorText, e);
-                            singleView.MainView = loadingView;
+                            rootHost.Children.Clear();
+                            rootHost.Children.Add(loadingView);
                         }
-                        StopStuckTimer();
+                        StopStuckTimer(mainViewExpected);
                     }, mainScheduler);
             }
 #endif

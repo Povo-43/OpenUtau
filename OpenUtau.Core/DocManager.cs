@@ -122,7 +122,13 @@ namespace OpenUtau.Core {
             var stopWatch = Stopwatch.StartNew();
             var files = new List<string>();
             try {
-                files.Add(Path.Combine(Path.GetDirectoryName(AppContext.BaseDirectory), kBuiltin));
+                // The builtin plugin ships as its own assembly on desktop, but on
+                // Android its types are part of the app assemblies; only add the
+                // file when it is actually there, so nothing logs a missing file.
+                string builtinFile = Path.Combine(Path.GetDirectoryName(AppContext.BaseDirectory), kBuiltin);
+                if (File.Exists(builtinFile)) {
+                    files.Add(builtinFile);
+                }
                 Directory.CreateDirectory(PathManager.Inst.PluginsPath);
                 string oldBuiltin = Path.Combine(PathManager.Inst.PluginsPath, kBuiltin);
                 if (File.Exists(oldBuiltin)) {

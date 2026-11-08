@@ -177,11 +177,19 @@ namespace OpenUtau.App.Views {
             PartSplitCommand = ReactiveCommand.Create<UPart>(async part =>  await SplitPart(part));
 
 #if ANDROID
-            // Feed the process-level UI-freeze watchdog from the dispatcher.
+            // Feed the process-level UI-freeze watchdog from the dispatcher, and
+            // log a heartbeat every 5 minutes so the log shows whether the UI
+            // thread keeps running while the screen appears stuck.
+            int heartbeatTicks = 0;
             uiHeartbeatTimer = new DispatcherTimer(
                 TimeSpan.FromSeconds(10),
                 DispatcherPriority.Background,
-                (_, _) => App.UiHeartbeat());
+                (_, _) => {
+                    App.UiHeartbeat();
+                    if (++heartbeatTicks % 30 == 0) {
+                        Log.Information("UI heartbeat ok ({Seconds}s).", heartbeatTicks * 10);
+                    }
+                });
             uiHeartbeatTimer.Start();
 #endif
 
@@ -194,11 +202,17 @@ namespace OpenUtau.App.Views {
 
             DocManager.Inst.AddSubscriber(this);
 
-            Log.Information("Main window checking Update.");
-            UpdaterDialog.CheckForUpdate(
-                dialog => dialog.Show(this),
-                () => (Application.Current?.ApplicationLifetime as IControlledApplicationLifetime)?.Shutdown(),
-                TaskScheduler.FromCurrentSynchronizationContext());
+            if (OS.IsAndroid()) {
+                // Android builds are installed from release APKs; there is no
+                // self-update channel, and the check would just log an error.
+                Log.Information("Skipping update check on Android.");
+            } else {
+                Log.Information("Main window checking Update.");
+                UpdaterDialog.CheckForUpdate(
+                    dialog => dialog.Show(this),
+                    () => (Application.Current?.ApplicationLifetime as IControlledApplicationLifetime)?.Shutdown(),
+                    TaskScheduler.FromCurrentSynchronizationContext());
+            }
             Log.Information("Created main window.");
             this.Cursor = null;
         }
@@ -879,6 +893,17 @@ namespace OpenUtau.App.Views {
         }
 
         void OnMenuCheckUpdate(object sender, RoutedEventArgs args) {
+            if (OS.IsAndroid()) {
+                // The updater cannot replace an installed APK; point to the app's
+                // releases page instead of showing a failed update.
+                MessageBox.Show(this,
+                    "Updates for Android are installed from APK files published on the " +
+                    "releases page. Open the page and install the newest APK over this one.\n\n" +
+                    "https://github.com/Povo-43/OpenUtau/releases",
+                    "Check update", MessageBox.MessageBoxButtons.Ok);
+                OS.OpenWeb("https://github.com/Povo-43/OpenUtau/releases");
+                return;
+            }
             var dialog = new UpdaterDialog();
             dialog.ViewModel.CloseApplication =
                 () => (Application.Current?.ApplicationLifetime as IControlledApplicationLifetime)?.Shutdown();

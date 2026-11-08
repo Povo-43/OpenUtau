@@ -101,6 +101,9 @@ namespace OpenUtau {
 
         // https://stackoverflow.com/a/15608028
         public static bool IsManagedAssembly(string fileName) {
+            if (!File.Exists(fileName)) {
+                return false;
+            }
             using var fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read);
             using var binaryReader = new BinaryReader(fileStream);
             if (fileStream.Length < 64) {
