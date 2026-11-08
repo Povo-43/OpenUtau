@@ -355,6 +355,18 @@ namespace OpenUtau.App.ViewModels {
                     await PackageManager.Inst.InstallFromFileAsync(file);
                     return;
                 }
+                // Reject obviously non-archive selections early with guidance; the
+                // Android file picker does not enforce the extension filter.
+                var extension = Path.GetExtension(file).ToLowerInvariant();
+                if (extension is not (".zip" or ".rar" or ".uar" or ".vogeon" or ".7z" or ".gz" or ".tgz")) {
+                    _ = await MessageBox.ShowError(window, new MessageCustomizableException(
+                        $"The selected file is not a singer package: {file}. " +
+                        "Choose the package file itself (.zip / .uar / .rar / .vogeon), " +
+                        "not a file inside the unpacked folder (e.g. acoustic.onnx).",
+                        $"<translate:errors.failed.installsinger>: {file}",
+                        new Exception($"Unsupported file type {extension}")));
+                    return;
+                }
 
                 var setup = new SingerSetupDialog() {
                     DataContext = new SingerSetupViewModel() {

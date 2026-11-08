@@ -97,8 +97,22 @@ namespace OpenUtau.App.ViewModels {
         }
 
         private bool IsEncrypted(string archiveFilePath) {
-            using (var archive = ArchiveFactory.OpenArchive(archiveFilePath, new ReaderOptions())) {
-                return archive.Entries.Any(e => e.IsEncrypted);
+            try {
+                using (var archive = ArchiveFactory.OpenArchive(archiveFilePath, new ReaderOptions())) {
+                    return archive.Entries.Any(e => e.IsEncrypted);
+                }
+            } catch (Exception e) {
+                // The picked file is not an archive at all — common when selecting a
+                // file inside an unpacked singer package (e.g. acoustic.onnx) instead
+                // of the package file itself. Give clear guidance instead of failing
+                // deep inside SharpCompress.
+                throw new MessageCustomizableException(
+                    "The selected file is not a singer archive. " +
+                    "Choose the package file itself (.zip / .uar / .rar / .vogeon), " +
+                    "not a file inside the unpacked folder (e.g. acoustic.onnx). "
+                    + archiveFilePath,
+                    "<translate:errors.notarchive>",
+                    e);
             }
         }
 
