@@ -6,6 +6,8 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using OpenUtau.Core;
+using Serilog;
 
 namespace OpenUtau.App.Views {
     /// <summary>
@@ -222,10 +224,30 @@ namespace OpenUtau.App.Views {
         }
 
         private static Panel BuildOverlay(AppWindowBase view, MainWindow main) {
+            // Diagnose sizing on devices where reported bounds and the visible
+            // surface disagree.
+            var topLevel = TopLevel.GetTopLevel(main);
+            double topLevelWidth = topLevel?.ClientSize.Width ?? 0;
+            double topLevelHeight = topLevel?.ClientSize.Height ?? 0;
+            double scaling = topLevel?.RenderScaling ?? 1;
+            Log.Information(
+                "Overlay sizing: main bounds {MainW:F0}x{MainH:F0}, top level client {TopW:F0}x{TopH:F0}, scaling {Scaling:F2}, view min {MinW}x{MinH}, fixed {FixW}x{FixH}",
+                main.Bounds.Width, main.Bounds.Height, topLevelWidth, topLevelHeight, scaling,
+                view.MinWidth, view.MinHeight, view.Width, view.Height);
+
             bool autoSize = view.SizeToContent != SizeToContent.Manual;
             double? fixedWidth = double.IsNaN(view.Width) ? null : view.Width;
             double? fixedHeight = double.IsNaN(view.Height) ? null : view.Height;
             bool hasFixedSize = fixedWidth.HasValue && fixedHeight.HasValue;
+
+            // The visible surface is the real limit; the main control itself may
+            // report a bigger size when it overflows the screen by the insets.
+            double availableWidth = Math.Max(240,
+                Math.Min(main.Bounds.Width - 24,
+                    topLevelWidth > 0 ? topLevelWidth - 24 : double.MaxValue));
+            double availableHeight = Math.Max(160,
+                Math.Min(main.Bounds.Height - 24,
+                    topLevelHeight > 0 ? topLevelHeight - 24 : double.MaxValue));
 
             // The frame controls the size; let the view fill it.
             view.Width = double.NaN;
@@ -265,16 +287,44 @@ namespace OpenUtau.App.Views {
                 Child = titleBar,
             };
 
+            // ContentControl content is scaled down to fit the available area, so
+            // dialogs designed for desktop (min width larger than a phone screen)
+            // still show every control inside the frame. The scale is computed
+            // after the content is measured.
             var content = new ContentControl {
                 Content = view,
                 HorizontalContentAlignment = HorizontalAlignment.Stretch,
                 VerticalContentAlignment = VerticalAlignment.Stretch,
             };
+            var fit = new LayoutTransformControl {
+                Child = content,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch,
+            };
+            fit.LayoutUpdated += (_, _) => {
+                double desiredWidth = view.DesiredSize.Width;
+                double desiredHeight = view.DesiredSize.Height;
+                double innerWidth = fit.Bounds.Width;
+                double innerHeight = fit.Bounds.Height;
+                if (desiredWidth <= 0 || desiredHeight <= 0 || innerWidth <= 0 || innerHeight <= 0) {
+                    return;
+                }
+                double scale = Math.Min(1,
+                    Math.Min(innerWidth / desiredWidth, innerHeight / desiredHeight));
+                if (double.IsNaN(scale) || double.IsInfinity(scale) || scale <= 0) {
+                    return;
+                }
+                if (fit.LayoutTransform is ScaleTransform existing &&
+                    Math.Abs(existing.ScaleX - scale) < 0.005) {
+                    return;
+                }
+                fit.LayoutTransform = new ScaleTransform(scale, scale);
+            };
 
             var dock = new DockPanel();
             DockPanel.SetDock(titleBorder, Dock.Top);
             dock.Children.Add(titleBorder);
-            dock.Children.Add(content);
+            dock.Children.Add(fit);
 
             var frame = new Border {
                 Child = dock,
@@ -289,8 +339,6 @@ namespace OpenUtau.App.Views {
                 Background = new SolidColorBrush(Color.Parse("#66000000")),
             };
 
-            double availableWidth = Math.Max(240, main.Bounds.Width - 24);
-            double availableHeight = Math.Max(160, main.Bounds.Height - 24);
             frame.MaxWidth = availableWidth;
             frame.MaxHeight = availableHeight;
 

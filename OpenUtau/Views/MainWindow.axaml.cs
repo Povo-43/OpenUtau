@@ -64,6 +64,27 @@ namespace OpenUtau.App.Views {
                     };
                 }
             }
+#if ANDROID
+            if (TopLevel.GetTopLevel(this) is { } topLevel2) {
+                Log.Information(
+                    "Main view geometry: view {VW:F0}x{VH:F0}, top level {TW:F0}x{TH:F0}, scaling {S:F2}",
+                    Bounds.Width, Bounds.Height, topLevel2.ClientSize.Width, topLevel2.ClientSize.Height,
+                    topLevel2.RenderScaling);
+                // Some devices report a client area larger than the visible screen
+                // (system bar insets etc.); layouts then overflow and controls land
+                // outside the display. Constrain the view to the reported client size.
+                if (Bounds.Width > topLevel2.ClientSize.Width + 1) {
+                    Log.Information("Constraining main view width {VW:F0} to {TW:F0}.",
+                        Bounds.Width, topLevel2.ClientSize.Width);
+                    MaxWidth = topLevel2.ClientSize.Width;
+                }
+                if (Bounds.Height > topLevel2.ClientSize.Height + 1) {
+                    Log.Information("Constraining main view height {VH:F0} to {TH:F0}.",
+                        Bounds.Height, topLevel2.ClientSize.Height);
+                    MaxHeight = topLevel2.ClientSize.Height;
+                }
+            }
+#endif
         }
 
         protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e) {
