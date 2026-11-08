@@ -119,6 +119,21 @@ namespace OpenUtau.App {
                             StopStuckTimer();
                             return;
                         }
+                        var steps = t.Result;
+                        var docManager = steps.FirstOrDefault(s => s.Name == "docmanager");
+                        if (docManager == null || !docManager.Completed) {
+                            // Creating the main window would touch singletons that may
+                            // still be initializing; report instead of risking a hang.
+                            Log.Error("Startup incomplete; doc manager step did not finish in time.");
+                            loadingText.Text = "Startup did not complete in time.";
+                            statusText.IsVisible = true;
+                            statusText.Text = "Timed out: " +
+                                string.Join(", ", steps.Where(s => !s.Completed).Select(s => s.Name)) +
+                                ". Tap the button below and report the log.";
+                            copyLogButton.IsVisible = true;
+                            StopStuckTimer();
+                            return;
+                        }
                         try {
                             loadingText.Text = "Creating main window…";
                             var mainWindow = new Views.MainWindow();
