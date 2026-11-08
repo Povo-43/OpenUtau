@@ -16,8 +16,8 @@
     <AndroidLinkMode>None</AndroidLinkMode>
     <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
     <AndroidAssetsPrefix>Assets</AndroidAssetsPrefix>
-    <AndroidSupportedAbis>arm64-v8a</AndroidSupportedAbis>
-    <AndroidExtractNativeLibs>false</AndroidExtractNativeLibs>
+    <!-- AndroidSupportedAbis is no longer supported (XA0036); use RuntimeIdentifiers instead -->
+    <RuntimeIdentifiers>android-arm64</RuntimeIdentifiers>
     <IsAndroid>true</IsAndroid>
   </PropertyGroup>
 
@@ -39,14 +39,14 @@
     <PackageReference Include="ReactiveUI.Avalonia" Version="12.1.2" />
   </ItemGroup>
 
-  <!-- Manually include OnnxRuntime Android native libraries from AAR since targets file only exists for net9.0-android35.0 -->
-  <Target Name="IncludeOnnxRuntimeAndroidNativeLibs" BeforeTargets="_ResolveLibraryProjectImports" Condition="'$(AndroidApplication)'=='true'">
-    <ItemGroup>
-      <AndroidLibrary Bind="false" Include="$([System.IO.Path]::Combine('$(NuGetPackageRoot)', 'microsoft.ml.onnxruntime', '1.31.0', 'runtimes', 'android', 'native', 'onnxruntime.aar'))">
-        <Link>%(Filename)%(Extension)</Link>
-      </AndroidLibrary>
-    </ItemGroup>
-  </Target>
+  <!--
+    NOTE: Do NOT add onnxruntime.aar as an AndroidLibrary, and do NOT strip ABIs from the
+    built APK. The NuGet package's own targets provide the arm64-v8a natives, and
+    RuntimeIdentifiers above keeps the APK single-ABI. Deleting entries from a SIGNED apk
+    with `zip -d` rewrites the archive and destroys the APK Signature Scheme v2/v3 blocks,
+    making Android 11+ reject the install with INSTALL_FAILED_INVALID_APK ("package appears
+    invalid") - this is what broke the v0.5.12 and v0.5.13 releases.
+  -->
 
   <ItemGroup>
     <ProjectReference Include="..\OpenUtau.Core\OpenUtau.Core.csproj" />
@@ -54,25 +54,5 @@
       <AdditionalProperties>OutputType=Library;DefineConstants=ANDROID;IsAndroid=true</AdditionalProperties>
     </ProjectReference>
   </ItemGroup>
-
-  <!-- Remove unwanted native library architectures from the APK after it's created -->
-  <Target Name="StripUnwantedAbisFromApk" AfterTargets="_BuildApk" Condition="'$(AndroidTargetArch)' == 'arm64' And '$(AndroidPackageFormat)' == 'apk'">
-    <PropertyGroup>
-      <_ApkPath>$(OutputPath)$(PackageId)-Signed.apk</_ApkPath>
-      <_StripCmd>bash $(MSBuildProjectDirectory)/StripAbis.sh "$(_ApkPath)"</_StripCmd>
-    </PropertyGroup>
-    <Exec Command="$(_StripCmd)" WorkingDirectory="$(MSBuildProjectDirectory)" />
-    <Message Importance="High" Text="Stripped unwanted native library architectures from APK" />
-  </Target>
-
-  <!-- Also strip from the publish APK -->
-  <Target Name="StripUnwantedAbisFromPublishApk" AfterTargets="Publish" Condition="'$(AndroidTargetArch)' == 'arm64' And '$(AndroidPackageFormat)' == 'apk'">
-    <PropertyGroup>
-      <_PublishApkPath>$(PublishDir)$(PackageId)-Signed.apk</_PublishApkPath>
-      <_PublishStripCmd>bash $(MSBuildProjectDirectory)/StripAbis.sh "$(_PublishApkPath)"</_PublishStripCmd>
-    </PropertyGroup>
-    <Exec Command="$(_PublishStripCmd)" WorkingDirectory="$(MSBuildProjectDirectory)" />
-    <Message Importance="High" Text="Stripped unwanted native library architectures from publish APK" />
-  </Target>
 
 </Project>
