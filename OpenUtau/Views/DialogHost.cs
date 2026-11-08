@@ -287,44 +287,31 @@ namespace OpenUtau.App.Views {
                 Child = titleBar,
             };
 
-            // ContentControl content is scaled down to fit the available area, so
-            // dialogs designed for desktop (min width larger than a phone screen)
-            // still show every control inside the frame. The scale is computed
-            // after the content is measured.
+            // On Android, dialogs designed for desktop (min sizes larger than the
+            // phone screen) become a near-full-screen frame one-to-one (no
+            // shrinking), with scrollable content so every control stays at its
+            // natural size and reachable. Small dialogs stay centered.
+            bool android = OperatingSystem.IsAndroid();
+            bool fullFrame = android &&
+                (!hasFixedSize || fixedWidth!.Value > availableWidth || fixedHeight!.Value > availableHeight);
+
+            // The content scrolls when it does not fit, so nothing is scaled down
+            // and nothing outside the frame is lost.
             var content = new ContentControl {
                 Content = view,
                 HorizontalContentAlignment = HorizontalAlignment.Stretch,
                 VerticalContentAlignment = VerticalAlignment.Stretch,
             };
-            var fit = new LayoutTransformControl {
-                Child = content,
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-                VerticalAlignment = VerticalAlignment.Stretch,
-            };
-            fit.LayoutUpdated += (_, _) => {
-                double desiredWidth = view.DesiredSize.Width;
-                double desiredHeight = view.DesiredSize.Height;
-                double innerWidth = fit.Bounds.Width;
-                double innerHeight = fit.Bounds.Height;
-                if (desiredWidth <= 0 || desiredHeight <= 0 || innerWidth <= 0 || innerHeight <= 0) {
-                    return;
-                }
-                double scale = Math.Min(1,
-                    Math.Min(innerWidth / desiredWidth, innerHeight / desiredHeight));
-                if (double.IsNaN(scale) || double.IsInfinity(scale) || scale <= 0) {
-                    return;
-                }
-                if (fit.LayoutTransform is ScaleTransform existing &&
-                    Math.Abs(existing.ScaleX - scale) < 0.005) {
-                    return;
-                }
-                fit.LayoutTransform = new ScaleTransform(scale, scale);
+            var scroll = new ScrollViewer {
+                Content = content,
+                HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
+                VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
             };
 
             var dock = new DockPanel();
             DockPanel.SetDock(titleBorder, Dock.Top);
             dock.Children.Add(titleBorder);
-            dock.Children.Add(fit);
+            dock.Children.Add(scroll);
 
             var frame = new Border {
                 Child = dock,
@@ -342,13 +329,24 @@ namespace OpenUtau.App.Views {
             frame.MaxWidth = availableWidth;
             frame.MaxHeight = availableHeight;
 
-            if (hasFixedSize || autoSize) {
+            if (fullFrame) {
+                // Near-full-screen: use the whole available surface.
+                frame.HorizontalAlignment = HorizontalAlignment.Center;
+                frame.VerticalAlignment = VerticalAlignment.Center;
+                frame.Margin = new Thickness(4);
+                frame.Width = availableWidth;
+                frame.Height = availableHeight;
+                layer.Children.Add(frame);
+            } else if (hasFixedSize || autoSize) {
                 frame.HorizontalAlignment = HorizontalAlignment.Center;
                 frame.VerticalAlignment = VerticalAlignment.Center;
                 frame.Margin = new Thickness(12);
                 if (hasFixedSize) {
                     frame.Width = Math.Min(fixedWidth!.Value, availableWidth);
                     frame.Height = Math.Min(fixedHeight!.Value, availableHeight);
+                } else {
+                    // Auto-sized; the scroll viewer keeps a big content within
+                    // the frame instead of clipping it.
                 }
                 layer.Children.Add(frame);
             } else {
