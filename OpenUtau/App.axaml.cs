@@ -92,15 +92,13 @@ namespace OpenUtau.App {
                         statusText.Text = DescribeException(e);
                     }
                 };
-                long lastUiHeartbeat = DateTime.UtcNow.Ticks;
-                void TrackUiHeartbeat() => Volatile.Write(ref lastUiHeartbeat, DateTime.UtcNow.Ticks);
                 var startupDone = new VolatileBool();
                 stuckTimer.Tick += (_, _) => {
                     if (loadingView.Content != loadingPanel) {
                         stuckTimer.Stop();
                         return;
                     }
-                    TrackUiHeartbeat();
+                    UiHeartbeat();
                     var elapsed = (int)(DateTime.UtcNow - startedAt).TotalSeconds;
                     statusText.IsVisible = true;
                     statusText.Text = $"Still working… {elapsed}s elapsed. " +
@@ -111,26 +109,59 @@ namespace OpenUtau.App {
                 void StopStuckTimer() {
                     startupDone.Value = true;
                     stuckTimer.Stop();
+                    UiStage = "running";
                 }
 
 #if ANDROID
-                // If the timer stops receiving ticks, the timer queue on the UI thread
-                // is probably out of new frames and frozen. At least record which
-                // startup stage we were in when it froze, so the log file identifies
-                // the culprit.
+                // Watchdog: the UI thread must keep pumping. The loading timer feeds
+                // the heartbeat during startup and the main window heartbeat timer
+                // afterwards. When it goes silent, record the stage; when it stays
+                // silent, exit the process so the next tap starts a clean one instead
+                // of leaving a frozen app on screen. A marker file limits automatic
+                // restarts so a deterministic hang cannot create a restart loop.
                 var uiFrozenWatchdog = new Thread(() => {
-                    while (!startupDone.Value) {
+                    int lastLoggedIdle = int.MinValue;
+                    while (true) {
                         Thread.Sleep(TimeSpan.FromSeconds(10));
-                        if (startupDone.Value) {
-                            return;
-                        }
-                        var idle = (DateTime.UtcNow.Ticks - Volatile.Read(ref lastUiHeartbeat))
-                            / TimeSpan.TicksPerSecond;
+                        int idle = (int)((DateTime.UtcNow.Ticks - Volatile.Read(ref LastUiHeartbeat))
+                            / TimeSpan.TicksPerSecond);
                         if (idle < 40) {
+                            lastLoggedIdle = 0;
                             continue;
                         }
-                        Log.Error("UI thread has not pumped for {Idle}s while showing \"{Stage}\" — frozen.",
-                            idle, loadingText.Text);
+                        if (lastLoggedIdle < 0 || idle - lastLoggedIdle >= 60) {
+                            Log.Error("UI thread has not pumped for {Idle}s (stage: {Stage}) — frozen.",
+                                idle, UiStage);
+                            lastLoggedIdle = idle;
+                        }
+                        if (idle < 60) {
+                            continue;
+                        }
+                        try {
+                            var marker = Path.Combine(PathManager.Inst.DataPath, "ui-restarts.txt");
+                            int count = 1;
+                            long stamp = 0;
+                            if (File.Exists(marker)) {
+                                var parts = File.ReadAllText(marker).Split(' ');
+                                stamp = long.Parse(parts[0]);
+                                count = int.Parse(parts[1]);
+                                if (DateTime.UtcNow.Ticks - stamp > TimeSpan.FromMinutes(4).Ticks) {
+                                    count = 0;
+                                }
+                            }
+                            if (count >= 2) {
+                                Log.Error("UI froze repeatedly; not auto-restarting again (count {Count}).", count);
+                                continue;
+                            }
+                            File.WriteAllText(marker, $"{DateTime.UtcNow.Ticks} {count + 1}");
+                            Log.Error("UI thread frozen (stage: {Stage}); restarting the process to recover (attempt {Count}).",
+                                UiStage, count + 1);
+                            Log.CloseAndFlush();
+                        } catch (Exception e) {
+                            Log.Error(e, "Failed to handle the restart marker.");
+                            Log.CloseAndFlush();
+                        }
+                        RequestRestartProcess();
                     }
                 }) {
                     IsBackground = true,
@@ -170,17 +201,21 @@ namespace OpenUtau.App {
                         try {
                             loadingText.Text = "Creating main window…";
                             Log.Information("Startup stage: creating main window.");
+                            UiStage = "creating main window";
                             var mainWindow = new Views.MainWindow();
                             Log.Information("Startup stage: attaching main view.");
+                            UiStage = "attaching main view";
                             singleView.MainView = mainWindow;
                             loadingText.Text = "Opening project…";
                             Log.Information("Startup stage: initializing project.");
+                            UiStage = "initializing project";
                             mainWindow.InitProject();
                             Log.Information("Startup stage: initializing loading window.");
                             LoadingWindow.InitializeLoadingWindow();
                             Log.Information("Startup completed.");
                         } catch (Exception e) {
                             Log.Error(e, "Failed to create main window.");
+                            UiStage = "main window failed";
                             ShowStartupError(loadingView, errorText, e);
                             singleView.MainView = loadingView;
                         }
@@ -203,6 +238,36 @@ namespace OpenUtau.App {
                 get => Volatile.Read(ref backing);
                 set => Volatile.Write(ref backing, value);
             }
+        }
+
+        /// <summary>
+        /// Unix ticks of the last UI-thread heartbeat. Fed by the loading timer and,
+        /// after startup, by the main window heartbeat timer, watched by the
+        /// UI-freeze watchdog.
+        /// </summary>
+        public static long LastUiHeartbeat = DateTime.UtcNow.Ticks;
+
+        /// <summary>The startup stage to report when the UI thread freezes.</summary>
+        public static string UiStage = "loading";
+
+        /// <summary>Records a live UI thread heartbeat (called on the UI thread).</summary>
+        public static void UiHeartbeat() {
+            Volatile.Write(ref LastUiHeartbeat, DateTime.UtcNow.Ticks);
+        }
+
+        /// <summary>
+        /// Set by the Android host; asks the runtime to end the process so the next
+        /// tap launches a clean one (recovery for a frozen UI thread).
+        /// </summary>
+        public static Action? RestartProcess = null;
+
+        /// <summary>Ends the process for a clean restart (see <see cref="RestartProcess"/>).</summary>
+        public static void RequestRestartProcess() {
+            if (RestartProcess is { } restart) {
+                restart();
+                return;
+            }
+            Environment.Exit(1);
         }
 
         /// <summary>

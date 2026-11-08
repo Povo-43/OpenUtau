@@ -23,6 +23,11 @@ public class OpenUtauApplication : AvaloniaAndroidApplication<global::OpenUtau.A
         base.OnCreate();
         InitAndroidLogging();
         Log.Information("OpenUtau Android application created.");
+        // Watchdog からのフリーズ回復はプロセスごと終了してクリーンな再起動とする
+        OpenUtau.App.App.RestartProcess = () => {
+            Java.Lang.Runtime.GetRuntime()?.Exit(0);
+            Java.Lang.JavaSystem.Exit(0);
+        };
         // Android オーディオ出力 (AudioTrack) を再生エンジンに差し替え
         PlaybackManager.Inst.AudioOutput = new AndroidAudioOutput();
     }

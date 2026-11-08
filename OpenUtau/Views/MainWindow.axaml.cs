@@ -45,6 +45,9 @@ namespace OpenUtau.App.Views {
         private PianoRollDetachedWindow? pianoRollWindow;
         private PianoRoll? pianoRoll;
         private WindowNotificationManager? notificationManager;
+#if ANDROID
+        private DispatcherTimer? uiHeartbeatTimer;
+#endif
 
         /// <summary>The single live main view. Used by the pseudo-window host.</summary>
         public static MainWindow? Instance { get; private set; }
@@ -53,6 +56,10 @@ namespace OpenUtau.App.Views {
         public Panel? OverlayHost => OverlayLayer;
 
         protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e) {
+            Log.Information("Main view attaching.");
+#if ANDROID
+            App.UiStage = "attaching main view layout";
+#endif
             base.OnAttachedToVisualTree(e);
             Instance = this;
             if (notificationManager == null) {
@@ -168,6 +175,15 @@ namespace OpenUtau.App.Views {
             PartTranscribeCommand = ReactiveCommand.Create<UPart>(part => Transcribe(part));
             PartMergeCommand = ReactiveCommand.Create<UPart>(part => MergePart(part));
             PartSplitCommand = ReactiveCommand.Create<UPart>(async part =>  await SplitPart(part));
+
+#if ANDROID
+            // Feed the process-level UI-freeze watchdog from the dispatcher.
+            uiHeartbeatTimer = new DispatcherTimer(
+                TimeSpan.FromSeconds(10),
+                DispatcherPriority.Background,
+                (_, _) => App.UiHeartbeat());
+            uiHeartbeatTimer.Start();
+#endif
 
             AddHandler(DragDrop.DropEvent, OnDrop);
 
