@@ -7,8 +7,8 @@
     <DebugType>embedded</DebugType>
     <Nullable>enable</Nullable>
     <LangVersion>12</LangVersion>
-    <!-- Android target check -->
-    <IsAndroid Condition="'$(TargetFramework)' == 'net10.0-android36.0' OR '$(TargetFramework)' == 'net10.0-android'">true</IsAndroid>
+    <!-- Android target check - true when TargetFramework is android -->
+    <IsAndroid Condition="'$(TargetFramework)' == 'net10.0-android36.0'">true</IsAndroid>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,7 +27,7 @@
     <PackageReference Include="NLayer.NAudioSupport" Version="1.4.0" />
     <PackageReference Include="NumSharp" Version="0.30.0" />
     <PackageReference Include="NWaves" Version="0.9.6" />
-    <PackageReference Include="SDL3-CS" Version="3.4.14" Condition="'$(IsAndroid)' != 'true'" />
+    <PackageReference Include="SDL3-CS" Version="3.4.14" />
     <PackageReference Include="SDL3-CS.Linux" Version="3.4.14" Condition="'$(IsAndroid)' != 'true'" />
     <PackageReference Include="SDL3-CS.MacOS" Version="3.4.14" Condition="'$(IsAndroid)' != 'true'" />
     <PackageReference Include="SDL3-CS.Windows" Version="3.4.14" Condition="'$(IsAndroid)' != 'true'" />
@@ -61,8 +61,13 @@
          resolved upward to 1.24.x through NU1603. -->
     <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.23.0" />
   </ItemGroup>
-  <ItemGroup Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true' AND '$(IsAndroid)' != 'true'">
-    <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu.Linux" Version="1.24.4" />
+  <ItemGroup>
+    <!-- Base OnnxRuntime 1.31.0 includes Android AAR with native libraries for all Android architectures -->
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.31.0" />
+    <!-- GPU Linux package only for non-Android Linux builds -->
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu.Linux" Version="1.24.4" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true' AND '$(IsAndroid)' != 'true'" />
+    <!-- WebGPU EP only for non-Android macOS builds -->
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.EP.WebGpu" Version="0.4.0" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true' AND '$(IsAndroid)' != 'true'" />
   </ItemGroup>
   <ItemGroup Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true' AND '$(IsAndroid)' != 'true'">
     <!-- 1.31.0 and the WebGPU plugin EP replace CoreML on macOS. The plugin library
@@ -72,7 +77,6 @@
          has to be at least the version the plugin was built for.
          NOTE: this package does not depend on the plugin, and the plugin does not
          depend on it; both have to move together. -->
-    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.31.0" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime.EP.WebGpu" Version="0.4.0" />
   </ItemGroup>
   <ItemGroup>
