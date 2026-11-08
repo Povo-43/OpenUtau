@@ -51,19 +51,21 @@ namespace OpenUtau.App {
                     FontSize = 12,
                     TextWrapping = TextWrapping.Wrap,
                 };
-                var loadingView = new ScrollViewer {
-                    Content = new TextBlock {
-                        Text = "Loading OpenUtau…",
-                        FontSize = 18,
-                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
-                        VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
-                    },
+                var loadingText = new TextBlock {
+                    Text = "Loading OpenUtau…",
+                    FontSize = 18,
+                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
                 };
+                var loadingView = new ScrollViewer { Content = loadingText };
                 singleView.MainView = loadingView;
 
                 var mainThread = Thread.CurrentThread;
                 var mainScheduler = TaskScheduler.FromCurrentSynchronizationContext();
-                Task.Run(() => AppStartup.InitializeCore(mainThread, mainScheduler))
+                Task.Run(() => AppStartup.InitializeCore(mainThread, mainScheduler,
+                        // Show each startup step on screen; the last visible step
+                        // identifies where startup is stuck on a device.
+                        step => Dispatcher.UIThread.Post(() => loadingText.Text = step)))
                     .ContinueWith(t => {
                         if (t.IsFaulted) {
                             Log.Error(t.Exception, "Failed to start OpenUtau.");
@@ -71,8 +73,10 @@ namespace OpenUtau.App {
                             return;
                         }
                         try {
+                            loadingText.Text = "Creating main window…";
                             var mainWindow = new Views.MainWindow();
                             singleView.MainView = mainWindow;
+                            loadingText.Text = "Opening project…";
                             mainWindow.InitProject();
                             LoadingWindow.InitializeLoadingWindow();
                         } catch (Exception e) {

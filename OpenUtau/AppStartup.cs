@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Threading;
@@ -13,12 +14,18 @@ namespace OpenUtau.App {
     /// attached.
     /// </summary>
     internal static class AppStartup {
-        public static void InitializeCore(Thread mainThread, TaskScheduler mainScheduler) {
-            Log.Information("Initializing OpenUtau.");
+        public static void InitializeCore(Thread mainThread, TaskScheduler mainScheduler, Action<string>? progress = null) {
+            void Step(string message) {
+                progress?.Invoke(message);
+                Log.Information(message);
+            }
+            Step("Initializing tools…");
             ToolsManager.Inst.Initialize();
             // Before the singer search, so the warnings it raises can be published.
+            Step("Initializing project manager…");
             DocManager.Inst.Initialize(mainThread, mainScheduler);
             DocManager.Inst.PostOnUIThread = action => Dispatcher.UIThread.Post(action);
+            Step("Searching singers…");
             SingerManager.Inst.Initialize();
             Log.Information("Initialized OpenUtau.");
             InitAudio();
