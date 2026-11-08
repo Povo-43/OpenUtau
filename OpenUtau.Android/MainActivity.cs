@@ -27,10 +27,14 @@ public class MainActivity : AvaloniaMainActivity {
 
         // ステータスバーの高さをアプリ側に通知し、コンテンツを下に押し出す
         // パディングに使ってもらう（メニューバーとステータスバーの重なり防止）。
+        // GetDimensionPixelSize は物理ピクセルを返すので、Avalonia の DIP に換算する。
         var resId = Resources.GetIdentifier("status_bar_height", "dimen", "android");
         if (resId > 0) {
-            OpenUtau.App.App.StatusBarHeight = Resources.GetDimensionPixelSize(resId);
-            Log.Information("Android status bar height: {Height:F0}px.", OpenUtau.App.App.StatusBarHeight);
+            var pixels = Resources.GetDimensionPixelSize(resId);
+            var density = Resources.DisplayMetrics.Density;
+            OpenUtau.App.App.StatusBarHeight = pixels / density;
+            Log.Information("Android status bar height: {Height:F0} DIP ({Pixels}px @ {Density:F1}x).",
+                OpenUtau.App.App.StatusBarHeight, pixels, density);
         }
     }
 
