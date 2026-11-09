@@ -14,6 +14,10 @@ using MonoMac.Foundation;
 using MonoMac.AppKit;
 using Serilog;
 #endif
+#if ANDROID
+using Android.App;
+using Android.Content;
+#endif
 
 namespace OpenUtau.App {
     internal class FilePicker {
@@ -351,12 +355,22 @@ namespace OpenUtau.App {
             var localPath = file.TryGetLocalPath();
             if (!string.IsNullOrEmpty(localPath)) return localPath;
             // Android SAF: TryGetLocalPath() returns null for content:// URIs.
-            // Save to a temp file first, then copy to the SAF stream so callers
-            // that expect a path string still work.
-            var tempPath = Path.Combine(Path.GetTempPath(), filename ?? "openutau-temp");
-            await using var tempStream = File.Create(tempPath);
-            await using var outStream = await file.OpenWriteAsync();
-            await tempStream.CopyToAsync(outStream);
+            // The caller renders into a temp file and then copies it to the SAF
+            // stream; do not write an empty placeholder here, or the destination
+            // ends up as a 0-byte file.
+            // Place the temp render target on external storage so the exported
+            // file is reachable from a PC over USB/MTP, not buried in app-private
+            // internal storage where normal file managers cannot reach it.
+            string tempDir = Path.GetTempPath();
+#if ANDROID
+            var extDir = Android.App.Application.Context.GetExternalFilesDir(null)?.AbsolutePath;
+            if (!string.IsNullOrEmpty(extDir)) {
+                tempDir = extDir;
+            }
+#endif
+            Directory.CreateDirectory(tempDir);
+            var tempPath = Path.Combine(tempDir, filename ?? "openutau-temp");
+            File.Create(tempPath).Dispose();
             return tempPath;
         }
 #endif
