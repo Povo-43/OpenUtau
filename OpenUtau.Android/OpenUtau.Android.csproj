@@ -9,8 +9,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AndroidApplication>True</AndroidApplication>
     <PackageId>com.stakira.openutau</PackageId>
-    <ApplicationVersion>3</ApplicationVersion>
-    <ApplicationVersionDisplayName>2.0.1</ApplicationVersionDisplayName>
+    <ApplicationVersion>4</ApplicationVersion>
+    <ApplicationVersionDisplayName>2.0.2</ApplicationVersionDisplayName>
     <AndroidEnableSdfConsumers>True</AndroidEnableSdfConsumers>
     <RunAotCompilation>false</RunAotCompilation>
     <AndroidLinkMode>None</AndroidLinkMode>
