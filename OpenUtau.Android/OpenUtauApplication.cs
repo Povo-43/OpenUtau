@@ -64,6 +64,7 @@ public class OpenUtauApplication : AvaloniaAndroidApplication<global::OpenUtau.A
             var externalDir = GetExternalFilesDir(null)?.AbsolutePath;
             if (!string.IsNullOrEmpty(externalDir)) {
                 PathManager.ExternalLogDirectory = externalDir;
+                PathManager.ExternalStorageDirectory = externalDir;
                 logger.WriteTo.Logger(lc => lc
                     .MinimumLevel.Information()
                     .WriteTo.File(Path.Combine(externalDir, "OpenUtau-.log"),

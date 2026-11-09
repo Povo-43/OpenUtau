@@ -94,6 +94,12 @@ namespace OpenUtau.Core {
         /// files are also written so they are reachable over USB/MTP.
         /// </summary>
         public static string? ExternalLogDirectory { get; set; }
+        /// <summary>
+        /// Set by the Android host to the app's external files directory, where
+        /// exported files are placed so they are reachable from a PC over USB/MTP.
+        /// Null on non-Android platforms.
+        /// </summary>
+        public static string? ExternalStorageDirectory { get; set; }
         public string SingersPathOld => Path.Combine(DataPath, "Content", "Singers");
         public string SingersPath => Path.Combine(DataPath, "Singers");
         public string AdditionalSingersPath => Preferences.Default.AdditionalSingerPath;

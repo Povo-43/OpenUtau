@@ -14,9 +14,6 @@ using MonoMac.Foundation;
 using MonoMac.AppKit;
 using Serilog;
 #endif
-#if ANDROID
-using Android.App;
-#endif
 
 namespace OpenUtau.App {
     internal class FilePicker {
@@ -122,7 +119,7 @@ namespace OpenUtau.App {
             var location = startLocation == null
                 ? null
                 : await TopLevel.GetTopLevel(visual)!.StorageProvider.TryGetFolderFromPathAsync(startLocation);
-        #if MACOS
+#if MACOS
             // Due to an avalonia bug, we need to call the native API for looking for APP
             if (types.Contains(APP)) {
                 var tcs = new TaskCompletionSource<string?>();
@@ -159,7 +156,7 @@ namespace OpenUtau.App {
 
                 return await tcs.Task;
             }
-        #endif
+#endif
 
 #if ANDROID
             return await OpenFileAndroid(visual, titleKey, startLocation, types);
@@ -337,15 +334,15 @@ namespace OpenUtau.App {
         }
 
 #if ANDROID
-    /// <summary>
-    /// Holds the open SAF output stream and the corresponding temp render target
-    /// for an in-flight export, so the caller can commit rendered audio to the
-    /// user-chosen destination after rendering to the temp file.
-    /// </summary>
-    public static class SafExportSink {
-        public Stream? Stream { get; set; }
-        public string? TempPath { get; set; }
-    }
+        /// <summary>
+        /// Holds the open SAF output stream and the corresponding temp render target
+        /// for an in-flight export, so the caller can commit rendered audio to the
+        /// user-chosen destination after rendering to the temp file.
+        /// </summary>
+        public static class SafExportSink {
+            public static Stream? Stream { get; set; }
+            public static string? TempPath { get; set; }
+        }
 
         private static async Task<string?> SaveFileAndroid(
             Visual? visual, string titleKey, string? startLocation, string? filename, params FilePickerFileType[] types) {
@@ -370,7 +367,7 @@ namespace OpenUtau.App {
             // as a 0-byte file.
             var outStream = await file.OpenWriteAsync();
             string tempDir = Path.GetTempPath();
-            var extDir = Android.App.Application.Context.GetExternalFilesDir(null)?.AbsolutePath;
+            var extDir = PathManager.ExternalStorageDirectory;
             if (!string.IsNullOrEmpty(extDir)) {
                 tempDir = extDir;
             }
