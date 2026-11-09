@@ -60,6 +60,7 @@ public class AndroidAudioOutput : IAudioOutput, IDisposable {
         RequestAudioFocus();
         _track!.SetStereoVolume(1.0f, 1.0f);
         _track!.Play();
+        Log.Information("AndroidAudioOutput.Play: AudioTrack state={State}.", _track!.PlayState);
         _thread = new Thread(RenderLoop) { IsBackground = true, Name = "OpenUtau Android Audio" };
         _thread.Start();
     }
@@ -119,9 +120,6 @@ public class AndroidAudioOutput : IAudioOutput, IDisposable {
             globalAndroidMedia.ChannelOut.Stereo,
             globalAndroidMedia.Encoding.Pcm16bit);
         if (bufferSize < 0) bufferSize = 4096;
-        // 最小バッファサイズでは書き込みが追いつかないことがあるため
-        // 4倍に確保する。
-        bufferSize *= 4;
         _track = new globalAndroidMedia.AudioTrack(
             globalAndroidMedia.Stream.Music,
             SampleRate,
@@ -146,12 +144,11 @@ public class AndroidAudioOutput : IAudioOutput, IDisposable {
                     pendingPcm.RemoveRange(0, toWrite);
                     var written = _track?.Write(pcm, 0, toWrite) ?? 0;
                     if (written < toWrite) {
-                        // 書き込めなかった分を先頭に戻してリトライ
+                        // 書き込めなかった分を先頭に戻して次回に回す。
+                        // AudioTrack のバッファ状態による部分書き込みは正常な動作。
                         for (int i = written; i < toWrite; i++) {
                             pendingPcm.Insert(0, pcm[i]);
                         }
-                        Log.Warning("AndroidAudioOutput.RenderLoop: wrote {Written}/{ToWrite} pending samples.", written, toWrite);
-                        Thread.Sleep(10);
                         continue;
                     }
                     continue;
@@ -177,7 +174,8 @@ public class AndroidAudioOutput : IAudioOutput, IDisposable {
                     for (int i = written2; i < read; i++) {
                         pendingPcm.Add(pcm[i]);
                     }
-                    Log.Warning("AndroidAudioOutput.RenderLoop: wrote {Written}/{Read} samples, {Pending} pending.", written2, read, pendingPcm.Count);
+                    Log.Warning("AndroidAudioOutput.RenderLoop: wrote {Written}/{Read} samples, {Pending} pending, track state={TrackState}.",
+                        written2, read, pendingPcm.Count, _track?.PlayState);
                 }
             }
             Log.Information("AndroidAudioOutput.RenderLoop: stopped normally.");
