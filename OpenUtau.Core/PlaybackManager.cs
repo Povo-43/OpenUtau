@@ -462,6 +462,20 @@ namespace OpenUtau.Core {
             masterMix = masterAdapter;
             AudioOutput.Stop();
             AudioOutput.Init(masterMix);
+
+            // RenderMixdown runs asynchronously (wait: false), so the source may
+            // not have any audio data yet when we reach here. Wait for the source
+            // to become ready before starting audio output, otherwise the adapter
+            // returns silence and playback appears to produce no sound.
+            int waitMs = 0;
+            while (!masterAdapter.IsReady(0, 4410) && waitMs < 30000) {
+                Thread.Sleep(50);
+                waitMs += 50;
+            }
+            if (waitMs >= 30000) {
+                Log.Error("StartPlayback: render source did not become ready within 30s.");
+            }
+
             AudioOutput.Play();
             // Cleared only after playback actually starts. Until then UpdatePlayPos
             // would see Stopped + PlayingMaster and stop the playback it is starting.

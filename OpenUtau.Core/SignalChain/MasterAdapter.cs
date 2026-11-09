@@ -20,6 +20,13 @@ namespace OpenUtau.Core.SignalChain {
         public bool IsWaiting { get; private set; }
 
         /// <summary>
+        /// Whether the underlying signal source can produce audio data at the given
+        /// position without blocking or returning silence. Delegated to the wrapped
+        /// <see cref="ISignalSource"/>.
+        /// </summary>
+        public bool IsReady(int position, int count) => source.IsReady(position, count);
+
+        /// <summary>
         /// Hold mode (default): while the source is not ready the
         /// adapter returns silence and accumulates <see cref="Waited"/> so the playhead
         /// stays put until the streaming render catches up.
