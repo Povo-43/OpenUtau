@@ -19,6 +19,7 @@ public class AndroidAudioOutput : IAudioOutput, IDisposable {
     private bool _running;
     private ISampleProvider? _provider;
     private object _lock = new();
+    private List<short> pendingPcm = new();
 
     public PlaybackState PlaybackState {
         get {
@@ -118,6 +119,9 @@ public class AndroidAudioOutput : IAudioOutput, IDisposable {
             globalAndroidMedia.ChannelOut.Stereo,
             globalAndroidMedia.Encoding.Pcm16bit);
         if (bufferSize < 0) bufferSize = 4096;
+        // 最小バッファサイズでは書き込みが追いつかないことがあるため
+        // 4倍に確保する。
+        bufferSize *= 4;
         _track = new globalAndroidMedia.AudioTrack(
             globalAndroidMedia.Stream.Music,
             SampleRate,
@@ -133,6 +137,26 @@ public class AndroidAudioOutput : IAudioOutput, IDisposable {
             var buffer = new float[SampleRate * Channels / 10]; // 100ms
             var pcm = new short[buffer.Length];
             while (_running) {
+                // まず保留中のデータを書き込む
+                if (pendingPcm.Count > 0) {
+                    int toWrite = Math.Min(pendingPcm.Count, pcm.Length);
+                    for (int i = 0; i < toWrite; i++) {
+                        pcm[i] = pendingPcm[i];
+                    }
+                    pendingPcm.RemoveRange(0, toWrite);
+                    var written = _track?.Write(pcm, 0, toWrite) ?? 0;
+                    if (written < toWrite) {
+                        // 書き込めなかった分を先頭に戻してリトライ
+                        for (int i = written; i < toWrite; i++) {
+                            pendingPcm.Insert(0, pcm[i]);
+                        }
+                        Log.Warning("AndroidAudioOutput.RenderLoop: wrote {Written}/{ToWrite} pending samples.", written, toWrite);
+                        Thread.Sleep(10);
+                        continue;
+                    }
+                    continue;
+                }
+
                 ISampleProvider? provider;
                 lock (_lock) {
                     provider = _provider;
@@ -147,9 +171,13 @@ public class AndroidAudioOutput : IAudioOutput, IDisposable {
                     float sample = Math.Clamp(buffer[i], -1f, 1f);
                     pcm[i] = (short)(sample * short.MaxValue);
                 }
-                var written = _track?.Write(pcm, 0, read) ?? 0;
-                if (written != read) {
-                    Log.Warning("AndroidAudioOutput.RenderLoop: wrote {Written}/{Read} samples.", written, read);
+                var written2 = _track?.Write(pcm, 0, read) ?? 0;
+                if (written2 < read) {
+                    // 書き込めなかった分を保留にして次回に回す
+                    for (int i = written2; i < read; i++) {
+                        pendingPcm.Add(pcm[i]);
+                    }
+                    Log.Warning("AndroidAudioOutput.RenderLoop: wrote {Written}/{Read} samples, {Pending} pending.", written2, read, pendingPcm.Count);
                 }
             }
             Log.Information("AndroidAudioOutput.RenderLoop: stopped normally.");
