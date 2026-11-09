@@ -465,12 +465,20 @@ namespace OpenUtau.Core {
 
             // RenderMixdown runs asynchronously (wait: false), so the source may
             // not have any audio data yet when we reach here. Wait for the source
-            // to become ready before starting audio output, otherwise the adapter
-            // returns silence and playback appears to produce no sound.
+            // to become ready at the playback position (not at position 0) before
+            // starting audio output, otherwise the adapter returns silence and
+            // playback appears to produce no sound. The source position is in
+            // interleaved samples, matching MasterAdapter.SetPosition below.
+            int startSample = (int)(startMs * 44100 / 1000) * 2;
             int waitMs = 0;
-            while (!masterAdapter.IsReady(0, 4410) && waitMs < 30000) {
+            while (PlayingMaster && !masterAdapter.IsReady(startSample, 4410) && waitMs < 30000) {
                 Thread.Sleep(50);
                 waitMs += 50;
+            }
+            if (!PlayingMaster) {
+                // Stopped while waiting: do not start audio output for a dead pass.
+                Log.Information("StartPlayback: playback stopped while waiting for the render source.");
+                return;
             }
             if (waitMs >= 30000) {
                 Log.Error("StartPlayback: render source did not become ready within 30s.");

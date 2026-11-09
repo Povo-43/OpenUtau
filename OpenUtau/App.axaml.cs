@@ -90,8 +90,12 @@ namespace OpenUtau.App {
                 // don't overlap the system UI. The height is set by MainActivity
                 // after Android resources are available; LayoutUpdated retries
                 // until it is non-zero.
+                double appliedStatusBarHeight = -1;
                 void ApplyStatusBarPadding() {
-                    if (StatusBarHeight > 0) {
+                    // LayoutUpdated fires on every pass; only touch the padding (and
+                    // log) when the height actually changes.
+                    if (StatusBarHeight > 0 && StatusBarHeight != appliedStatusBarHeight) {
+                        appliedStatusBarHeight = StatusBarHeight;
                         rootHost.Padding = new Thickness(0, StatusBarHeight, 0, 0);
                         Log.Information("Status bar height: {Height:F0}, padding applied.", StatusBarHeight);
                     }

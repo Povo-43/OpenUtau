@@ -9,8 +9,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AndroidApplication>True</AndroidApplication>
     <PackageId>com.stakira.openutau</PackageId>
-    <ApplicationVersion>2</ApplicationVersion>
-    <ApplicationVersionDisplayName>2.0.0</ApplicationVersionDisplayName>
+    <ApplicationVersion>3</ApplicationVersion>
+    <ApplicationVersionDisplayName>2.0.1</ApplicationVersionDisplayName>
     <AndroidEnableSdfConsumers>True</AndroidEnableSdfConsumers>
     <RunAotCompilation>false</RunAotCompilation>
     <AndroidLinkMode>None</AndroidLinkMode>
@@ -24,6 +24,18 @@
   <ItemGroup>
     <AndroidResource Include="Resources\drawable\*" />
     <AndroidAsset Include="Assets\**" />
+  </ItemGroup>
+
+  <!--
+    Worldline native synthesis library for Classic/UTAU singing. The default
+    classic renderer (WORLDLINE-R) and the default CLASSIC resampler both call
+    into libworldline.so via DllImport("worldline"). This is an Android NDK
+    build (bionic/arm64), not the desktop linux-arm64 binary. Rebuild with
+    cpp/build_android.sh after changing the C++ sources.
+  -->
+  <ItemGroup>
+    <AndroidNativeLibrary Include="..\runtimes\android\arm64-v8a\libworldline.so"
+                          Abi="arm64-v8a" />
   </ItemGroup>
 
   <ItemGroup>

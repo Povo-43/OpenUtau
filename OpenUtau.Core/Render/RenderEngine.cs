@@ -196,24 +196,28 @@ namespace OpenUtau.Core.Render {
             });
             task.ContinueWith(task => {
                 if (task.IsFaulted && !wait) {
+                    // Run on a pool thread, not the UI scheduler: playback must stop
+                    // and the failure must be logged even when the UI thread is busy.
                     Log.Error(task.Exception.Flatten(), "Failed to render.");
                     PlaybackManager.Inst.StopPlayback();
                     var flatEx = task.Exception.Flatten();
                     var innerEx = flatEx.InnerExceptions.ToList();
+                    MessageCustomizableException error;
                     if (innerEx.Count == 1 && innerEx[0] is MessageCustomizableException mce) {
-                        DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(mce));
+                        error = mce;
                     } else if (innerEx.Any(e => e is DllNotFoundException)) {
-                        DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(
-                            new MessageCustomizableException("Failed to render.", "<translate:errors.failed.render>: <translate:errors.install.cpp>", flatEx)));
+                        error = new MessageCustomizableException("Failed to render.", "<translate:errors.failed.render>: <translate:errors.install.cpp>", flatEx);
                     } else if (innerEx.Any(e => e is ResamplerFailedException)) {
-                        DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(
-                            new MessageCustomizableException("Failed to render.", "<translate:errors.resampler.failed.message>", flatEx)));
+                        error = new MessageCustomizableException("Failed to render.", "<translate:errors.resampler.failed.message>", flatEx);
                     } else {
-                        DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(
-                            new MessageCustomizableException("Failed to render.", "<translate:errors.failed.render>", flatEx)));
+                        error = new MessageCustomizableException("Failed to render.", "<translate:errors.failed.render>", flatEx);
                     }
+                    // Only the notification itself needs the UI thread.
+                    Task.Factory.StartNew(() => {
+                        DocManager.Inst.ExecuteCmd(new ErrorMessageNotification(error));
+                    }, CancellationToken.None, TaskCreationOptions.None, uiScheduler ?? TaskScheduler.Default);
                 }
-            }, CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted, uiScheduler);
+            }, CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted, TaskScheduler.Default);
             if (wait) {
                 task.Wait();
             }

@@ -88,7 +88,9 @@ public class AndroidAudioOutput : IAudioOutput, IDisposable {
     }
 
     public long GetPosition() {
-        return _track?.PlaybackHeadPosition ?? 0;
+        // PlaybackHeadPosition is in frames. PlaybackManager expects the SDL /
+        // MiniAudio convention of 16-bit PCM bytes, i.e. frames * channels * 2.
+        return (long)(_track?.PlaybackHeadPosition ?? 0) * Channels * sizeof(short);
     }
 
     public List<AudioOutputDevice> GetOutputDevices() {
@@ -146,7 +148,8 @@ public class AndroidAudioOutput : IAudioOutput, IDisposable {
                     if (written < toWrite) {
                         // 書き込めなかった分を先頭に戻して次回に回す。
                         // AudioTrack のバッファ状態による部分書き込みは正常な動作。
-                        for (int i = written; i < toWrite; i++) {
+                        // 後ろから挿入して元の順序を保つ（前から Insert(0) すると逆順になる）。
+                        for (int i = toWrite - 1; i >= written; i--) {
                             pendingPcm.Insert(0, pcm[i]);
                         }
                         continue;
