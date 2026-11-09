@@ -19,6 +19,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.ref }}
 
       # .NET 10 SDK (OpenUtau は net10.0 対象)
       - uses: actions/setup-dotnet@v4
