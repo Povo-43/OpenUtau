@@ -585,17 +585,16 @@ namespace OpenUtau.App.Views {
 
 #if ANDROID
         private static async Task CommitSafExport(string? tempPath) {
-            var sink = FilePicker.SafExportSink;
-            if (sink.Stream == null || string.IsNullOrEmpty(tempPath)) {
+            if (FilePicker.SafExportSink.Stream == null || string.IsNullOrEmpty(tempPath)) {
                 return;
             }
             try {
                 using var fs = File.OpenRead(tempPath);
-                await fs.CopyToAsync(sink.Stream);
+                await fs.CopyToAsync(FilePicker.SafExportSink.Stream);
             } finally {
-                sink.Stream.Dispose();
-                sink.Stream = null;
-                sink.TempPath = null;
+                FilePicker.SafExportSink.Stream.Dispose();
+                FilePicker.SafExportSink.Stream = null;
+                FilePicker.SafExportSink.TempPath = null;
             }
         }
 #endif
