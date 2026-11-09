@@ -607,8 +607,7 @@ namespace OpenUtau.App.Views {
                 await PlaybackManager.Inst.RenderToFiles(project, tempBase);
                 foreach (var src in Directory.GetFiles(tempDir, "*.wav")) {
                     var fileName = Path.GetFileName(src);
-                    var storageFile = await folder.CreateFileAsync(
-                        fileName, CreationCollisionOption.ReplaceExisting);
+                    var storageFile = await folder.CreateFileAsync(fileName);
                     await using var dst = await storageFile.OpenWriteAsync();
                     await using var srcStream = File.OpenRead(src);
                     await srcStream.CopyToAsync(dst);
@@ -736,8 +735,7 @@ namespace OpenUtau.App.Views {
                         }
                         foreach (var src in Directory.GetFiles(tempDir, "*.ust")) {
                             var fileName = Path.GetFileName(src);
-                            var storageFile = await folder!.CreateFileAsync(
-                                fileName, CreationCollisionOption.ReplaceExisting);
+                            var storageFile = await folder!.CreateFileAsync(fileName);
                             await using var dst = await storageFile.OpenWriteAsync();
                             await using var srcStream = File.OpenRead(src);
                             await srcStream.CopyToAsync(dst);
