@@ -5,6 +5,8 @@ using NAudio.Wave;
 using OpenUtau.Audio;
 using Serilog;
 using globalAndroidMedia = Android.Media;
+using globalAndroidApp = Android.App;
+using globalAndroidContent = Android.Content;
 
 namespace OpenUtau.Android.Audio;
 
@@ -37,15 +39,25 @@ public class AndroidAudioOutput : IAudioOutput, IDisposable {
         lock (_lock) {
             _provider = sampleProvider;
         }
+        Log.Information("AndroidAudioOutput.Init: provider set.");
     }
 
     public void Play() {
         lock (_lock) {
-            if (_provider == null) return;
-            if (_running) return;
+            if (_provider == null) {
+                Log.Warning("AndroidAudioOutput.Play: provider is null, cannot start.");
+                return;
+            }
+            if (_running) {
+                Log.Information("AndroidAudioOutput.Play: already running.");
+                return;
+            }
             _running = true;
         }
+        Log.Information("AndroidAudioOutput.Play: starting AudioTrack and render loop.");
         EnsureTrack();
+        RequestAudioFocus();
+        _track!.SetStereoVolume(1.0f, 1.0f);
         _track!.Play();
         _thread = new Thread(RenderLoop) { IsBackground = true, Name = "OpenUtau Android Audio" };
         _thread.Start();
@@ -88,8 +100,19 @@ public class AndroidAudioOutput : IAudioOutput, IDisposable {
         };
     }
 
+    private void RequestAudioFocus() {
+        try {
+            var audioManager = (globalAndroidMedia.AudioManager)globalAndroidApp.Application.Context.GetSystemService(globalAndroidContent.Context.AudioService);
+            var result = audioManager.RequestAudioFocus(null, globalAndroidMedia.Stream.Music, globalAndroidMedia.AudioFocus.Gain);
+            Log.Information("AndroidAudioOutput.RequestAudioFocus: result={Result}.", result);
+        } catch (Exception ex) {
+            Log.Warning(ex, "AndroidAudioOutput.RequestAudioFocus failed.");
+        }
+    }
+
     private void EnsureTrack() {
         if (_track != null) return;
+        Log.Information("AndroidAudioOutput.EnsureTrack: creating AudioTrack.");
         int bufferSize = globalAndroidMedia.AudioTrack.GetMinBufferSize(
             SampleRate,
             globalAndroidMedia.ChannelOut.Stereo,
@@ -106,6 +129,7 @@ public class AndroidAudioOutput : IAudioOutput, IDisposable {
 
     private void RenderLoop() {
         try {
+            Log.Information("AndroidAudioOutput.RenderLoop: started.");
             var buffer = new float[SampleRate * Channels / 10]; // 100ms
             var pcm = new short[buffer.Length];
             while (_running) {
@@ -123,8 +147,12 @@ public class AndroidAudioOutput : IAudioOutput, IDisposable {
                     float sample = Math.Clamp(buffer[i], -1f, 1f);
                     pcm[i] = (short)(sample * short.MaxValue);
                 }
-                _track?.Write(pcm, 0, read);
+                var written = _track?.Write(pcm, 0, read) ?? 0;
+                if (written != read) {
+                    Log.Warning("AndroidAudioOutput.RenderLoop: wrote {Written}/{Read} samples.", written, read);
+                }
             }
+            Log.Information("AndroidAudioOutput.RenderLoop: stopped normally.");
         } catch (Exception ex) {
             Log.Error(ex, "AndroidAudioOutput render loop error");
         } finally {
