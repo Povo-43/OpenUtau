@@ -575,8 +575,30 @@ namespace OpenUtau.App.Views {
                 this, "menu.file.exportmixdown", FilePicker.WAV);
             if (!string.IsNullOrEmpty(file)) {
                 await PlaybackManager.Inst.RenderMixdown(project, file);
+#if ANDROID
+                // SAF content:// URI: the renderer wrote to a temp file; commit
+                // the rendered audio to the user-chosen destination stream.
+                await CommitSafExport(file);
+#endif
             }
         }
+
+#if ANDROID
+        private static async Task CommitSafExport(string? tempPath) {
+            var sink = FilePicker.SafExportSink;
+            if (sink.Stream == null || string.IsNullOrEmpty(tempPath)) {
+                return;
+            }
+            try {
+                using var fs = File.OpenRead(tempPath);
+                await fs.CopyToAsync(sink.Stream);
+            } finally {
+                sink.Stream.Dispose();
+                sink.Stream = null;
+                sink.TempPath = null;
+            }
+        }
+#endif
 
         async void OnMenuExportWav(object sender, RoutedEventArgs args) {
             var project = DocManager.Inst.Project;

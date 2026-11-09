@@ -16,7 +16,6 @@ using Serilog;
 #endif
 #if ANDROID
 using Android.App;
-using Android.Content;
 #endif
 
 namespace OpenUtau.App {
@@ -338,6 +337,16 @@ namespace OpenUtau.App {
         }
 
 #if ANDROID
+    /// <summary>
+    /// Holds the open SAF output stream and the corresponding temp render target
+    /// for an in-flight export, so the caller can commit rendered audio to the
+    /// user-chosen destination after rendering to the temp file.
+    /// </summary>
+    public static class SafExportSink {
+        public Stream? Stream { get; set; }
+        public string? TempPath { get; set; }
+    }
+
         private static async Task<string?> SaveFileAndroid(
             Visual? visual, string titleKey, string? startLocation, string? filename, params FilePickerFileType[] types) {
             var location = startLocation == null
@@ -355,22 +364,21 @@ namespace OpenUtau.App {
             var localPath = file.TryGetLocalPath();
             if (!string.IsNullOrEmpty(localPath)) return localPath;
             // Android SAF: TryGetLocalPath() returns null for content:// URIs.
-            // The caller renders into a temp file and then copies it to the SAF
-            // stream; do not write an empty placeholder here, or the destination
-            // ends up as a 0-byte file.
-            // Place the temp render target on external storage so the exported
-            // file is reachable from a PC over USB/MTP, not buried in app-private
-            // internal storage where normal file managers cannot reach it.
+            // Keep the write stream open so the caller can commit rendered audio
+            // to the user-chosen destination after rendering to a temp file.
+            // Do not write an empty placeholder here, or the destination ends up
+            // as a 0-byte file.
+            var outStream = await file.OpenWriteAsync();
             string tempDir = Path.GetTempPath();
-#if ANDROID
             var extDir = Android.App.Application.Context.GetExternalFilesDir(null)?.AbsolutePath;
             if (!string.IsNullOrEmpty(extDir)) {
                 tempDir = extDir;
             }
-#endif
             Directory.CreateDirectory(tempDir);
             var tempPath = Path.Combine(tempDir, filename ?? "openutau-temp");
             File.Create(tempPath).Dispose();
+            SafExportSink.Stream = outStream;
+            SafExportSink.TempPath = tempPath;
             return tempPath;
         }
 #endif
