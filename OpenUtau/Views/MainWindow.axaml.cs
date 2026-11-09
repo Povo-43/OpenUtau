@@ -15,6 +15,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using Avalonia.Platform.Storage;
 using OpenUtau.App.Controls;
 using OpenUtau.App.ViewModels;
 using OpenUtau.Classic;
@@ -597,25 +598,70 @@ namespace OpenUtau.App.Views {
                 FilePicker.SafExportSink.TempPath = null;
             }
         }
+
+        private static async Task RenderToSafFolder(UProject project, IStorageFolder folder, string baseExportPath) {
+            var tempDir = Path.Combine(Path.GetTempPath(), $"openutau-export-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(tempDir);
+            var tempBase = Path.Combine(tempDir, Path.GetFileName(baseExportPath));
+            try {
+                await PlaybackManager.Inst.RenderToFiles(project, tempBase);
+                foreach (var src in Directory.GetFiles(tempDir, "*.wav")) {
+                    var fileName = Path.GetFileName(src);
+                    var storageFile = await folder.CreateFileAsync(
+                        fileName, CreationCollisionOption.ReplaceExisting);
+                    await using var dst = await storageFile.OpenWriteAsync();
+                    await using var srcStream = File.OpenRead(src);
+                    await srcStream.CopyToAsync(dst);
+                }
+            } finally {
+                Directory.Delete(tempDir, true);
+            }
+        }
 #endif
 
         async void OnMenuExportWav(object sender, RoutedEventArgs args) {
             var project = DocManager.Inst.Project;
             if (await WarnToSave(project)) {
+#if ANDROID
+                var (folderPath, folder) = await FilePicker.OpenFolderAboutProjectEx(
+                    this, "menu.file.exportwav");
+                if (folder == null && string.IsNullOrEmpty(folderPath)) return;
+                var name = Path.GetFileNameWithoutExtension(project.FilePath ?? "Untitled");
+                var baseExportPath = Path.Combine(folderPath ?? Path.GetTempPath(), $"{name}.wav");
+                if (!string.IsNullOrEmpty(folderPath)) {
+                    await PlaybackManager.Inst.RenderToFiles(project, baseExportPath);
+                } else {
+                    await RenderToSafFolder(project, folder!, baseExportPath);
+                }
+#else
                 var name = Path.GetFileNameWithoutExtension(project.FilePath);
                 var path = Path.GetDirectoryName(project.FilePath);
                 path = Path.Combine(path!, "Export", $"{name}.wav");
                 await PlaybackManager.Inst.RenderToFiles(project, path);
+#endif
             }
         }
 
         async void OnMenuExportWavTo(object sender, RoutedEventArgs args) {
             var project = DocManager.Inst.Project;
+#if ANDROID
+            var (folderPath, folder) = await FilePicker.OpenFolderAboutProjectEx(
+                this, "menu.file.exportwavto");
+            if (folder == null && string.IsNullOrEmpty(folderPath)) return;
+            var name = Path.GetFileNameWithoutExtension(project.FilePath ?? "Untitled");
+            var baseExportPath = Path.Combine(folderPath ?? Path.GetTempPath(), $"{name}.wav");
+            if (!string.IsNullOrEmpty(folderPath)) {
+                await PlaybackManager.Inst.RenderToFiles(project, baseExportPath);
+            } else {
+                await RenderToSafFolder(project, folder!, baseExportPath);
+            }
+#else
             var file = await FilePicker.SaveFileAboutProject(
                 this, "menu.file.exportwavto", FilePicker.WAV);
             if (!string.IsNullOrEmpty(file)) {
                 await PlaybackManager.Inst.RenderToFiles(project, file);
             }
+#endif
         }
 
         async void OnMenuExportDsTo(object sender, RoutedEventArgs e) {
@@ -660,6 +706,47 @@ namespace OpenUtau.App.Views {
         async void OnMenuExportUst(object sender, RoutedEventArgs e) {
             var project = DocManager.Inst.Project;
             if (await WarnToSave(project)) {
+#if ANDROID
+                var (folderPath, folder) = await FilePicker.OpenFolderAboutProjectEx(
+                    this, "menu.file.exportust");
+                if (folder == null && string.IsNullOrEmpty(folderPath)) return;
+                var name = Path.GetFileNameWithoutExtension(project.FilePath ?? "Untitled");
+                if (!string.IsNullOrEmpty(folderPath)) {
+                    for (var i = 0; i < project.parts.Count; i++) {
+                        var part = project.parts[i];
+                        if (part is UVoicePart voicePart) {
+                            var savePath = PathManager.Inst.GetPartSavePath(
+                                Path.Combine(folderPath, $"{name}.ust"), voicePart.DisplayName, i);
+                            Ust.SavePart(project, voicePart, savePath);
+                            DocManager.Inst.ExecuteCmd(new ProgressBarNotification(0, $"{savePath}."));
+                        }
+                    }
+                } else {
+                    var tempDir = Path.Combine(Path.GetTempPath(), $"openutau-export-{Guid.NewGuid():N}");
+                    Directory.CreateDirectory(tempDir);
+                    try {
+                        for (var i = 0; i < project.parts.Count; i++) {
+                            var part = project.parts[i];
+                            if (part is UVoicePart voicePart) {
+                                var savePath = PathManager.Inst.GetPartSavePath(
+                                    Path.Combine(tempDir, $"{name}.ust"), voicePart.DisplayName, i);
+                                Ust.SavePart(project, voicePart, savePath);
+                                DocManager.Inst.ExecuteCmd(new ProgressBarNotification(0, $"{savePath}."));
+                            }
+                        }
+                        foreach (var src in Directory.GetFiles(tempDir, "*.ust")) {
+                            var fileName = Path.GetFileName(src);
+                            var storageFile = await folder!.CreateFileAsync(
+                                fileName, CreationCollisionOption.ReplaceExisting);
+                            await using var dst = await storageFile.OpenWriteAsync();
+                            await using var srcStream = File.OpenRead(src);
+                            await srcStream.CopyToAsync(dst);
+                        }
+                    } finally {
+                        Directory.Delete(tempDir, true);
+                    }
+                }
+#else
                 var name = Path.GetFileNameWithoutExtension(project.FilePath);
                 var path = Path.GetDirectoryName(project.FilePath);
                 path = Path.Combine(path!, "Export", $"{name}.ust");
@@ -671,11 +758,53 @@ namespace OpenUtau.App.Views {
                         DocManager.Inst.ExecuteCmd(new ProgressBarNotification(0, $"{savePath}."));
                     }
                 }
+#endif
             }
         }
 
         async void OnMenuExportUstTo(object sender, RoutedEventArgs e) {
             var project = DocManager.Inst.Project;
+#if ANDROID
+            var (folderPath, folder) = await FilePicker.OpenFolderAboutProjectEx(
+                this, "menu.file.exportustto");
+            if (folder == null && string.IsNullOrEmpty(folderPath)) return;
+            var name = Path.GetFileNameWithoutExtension(project.FilePath ?? "Untitled");
+            if (!string.IsNullOrEmpty(folderPath)) {
+                for (var i = 0; i < project.parts.Count; i++) {
+                    var part = project.parts[i];
+                    if (part is UVoicePart voicePart) {
+                        var savePath = PathManager.Inst.GetPartSavePath(
+                            Path.Combine(folderPath, $"{name}.ust"), voicePart.DisplayName, i);
+                        Ust.SavePart(project, voicePart, savePath);
+                        DocManager.Inst.ExecuteCmd(new ProgressBarNotification(0, $"{savePath}."));
+                    }
+                }
+            } else {
+                var tempDir = Path.Combine(Path.GetTempPath(), $"openutau-export-{Guid.NewGuid():N}");
+                Directory.CreateDirectory(tempDir);
+                try {
+                    for (var i = 0; i < project.parts.Count; i++) {
+                        var part = project.parts[i];
+                        if (part is UVoicePart voicePart) {
+                            var savePath = PathManager.Inst.GetPartSavePath(
+                                Path.Combine(tempDir, $"{name}.ust"), voicePart.DisplayName, i);
+                            Ust.SavePart(project, voicePart, savePath);
+                            DocManager.Inst.ExecuteCmd(new ProgressBarNotification(0, $"{savePath}."));
+                        }
+                    }
+                    foreach (var src in Directory.GetFiles(tempDir, "*.ust")) {
+                        var fileName = Path.GetFileName(src);
+                        var storageFile = await folder!.CreateFileAsync(
+                            fileName, CreationCollisionOption.ReplaceExisting);
+                        await using var dst = await storageFile.OpenWriteAsync();
+                        await using var srcStream = File.OpenRead(src);
+                        await srcStream.CopyToAsync(dst);
+                    }
+                } finally {
+                    Directory.Delete(tempDir, true);
+                }
+            }
+#else
             var file = await FilePicker.SaveFileAboutProject(
                 this, "menu.file.exportustto", FilePicker.UST);
             if (!string.IsNullOrEmpty(file)) {
@@ -688,6 +817,7 @@ namespace OpenUtau.App.Views {
                     }
                 }
             }
+#endif
         }
 
         async void OnMenuExportMidi(object sender, RoutedEventArgs e) {

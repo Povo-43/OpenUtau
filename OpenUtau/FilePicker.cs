@@ -378,6 +378,33 @@ namespace OpenUtau.App {
             SafExportSink.TempPath = tempPath;
             return tempPath;
         }
+
+        /// <summary>
+        /// Opens a folder picker and returns both the local path (when available)
+        /// and the IStorageFolder (for SAF content:// URIs where no local path exists).
+        /// The chosen folder is remembered as the recent project directory.
+        /// </summary>
+        public async static Task<(string? LocalPath, IStorageFolder? Folder)> OpenFolderAboutProjectEx(
+            Visual? visual, string titleKey) {
+            var location = Preferences.Default.RecentOpenProjectDirectory == null
+                ? null
+                : await TopLevel.GetTopLevel(visual)!.StorageProvider.TryGetFolderFromPathAsync(
+                    Preferences.Default.RecentOpenProjectDirectory);
+            var folders = await TopLevel.GetTopLevel(visual)!.StorageProvider.OpenFolderPickerAsync(
+                new FolderPickerOpenOptions {
+                    Title = ThemeManager.GetString(titleKey),
+                    AllowMultiple = false,
+                    SuggestedStartLocation = location,
+                });
+            var folder = folders?.FirstOrDefault();
+            if (folder == null) return (null, null);
+            var localPath = folder.TryGetLocalPath();
+            if (localPath != null) {
+                Preferences.Default.RecentOpenProjectDirectory = localPath;
+                Preferences.Save();
+            }
+            return (localPath, folder);
+        }
 #endif
     }
 }
